@@ -651,6 +651,8 @@ function exportCSV() {
 function exportHTML() {
   if (!state.plan) return;
   const { inputs, calendar } = state.plan;
+  const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  const defaultPath = `content-plan-${ts}.html`;
 
   const esc = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
