@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Content AI Agent</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0b0f17">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-robot"></i> Social Media AI Agent</h1>
+                <p>Your AI-powered content strategist for viral growth</p>
+                <div class="header-actions">
+                  <button id="installAppBtn" class="btn-secondary" style="display:none;">
+                    <i class="fas fa-download"></i> Install App
+                  </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="input-section">
+                <div class="card">
+                    <h2><i class="fas fa-user-circle"></i> Influencer Profile</h2>
+                    <form id="contentForm">
+                        <div class="form-group">
+                            <label for="niche">Niche/Industry</label>
+                            <select id="niche" required>
+                                <option value="">Select your niche</option>
+                                <option value="realestate">Real Estate</option>
+                                <option value="lifestyle">Lifestyle</option>
+                                <option value="fitness">Fitness & Health</option>
+                                <option value="beauty">Beauty & Fashion</option>
+                                <option value="food">Food & Cooking</option>
+                                <option value="travel">Travel</option>
+                                <option value="tech">Technology</option>
+                                <option value="business">Business & Entrepreneurship</option>
+                                <option value="education">Education</option>
+                                <option value="entertainment">Entertainment</option>
+                                <option value="parenting">Parenting</option>
+                                <option value="finance">Personal Finance</option>
+                                <option value="diy">DIY & Crafts</option>
+                                <option value="gaming">Gaming</option>
+                                <option value="music">Music</option>
+                                <option value="art">Art & Design</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="platforms">Primary Platforms</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="platforms" value="instagram"> Instagram
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="platforms" value="tiktok"> TikTok
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="platforms" value="youtube"> YouTube
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="platforms" value="twitter"> Twitter/X
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="platforms" value="linkedin"> LinkedIn
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="platforms" value="facebook"> Facebook
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="currentFollowers">Current Followers</label>
+                                <select id="currentFollowers">
+                                    <option value="0-1k">0 - 1K</option>
+                                    <option value="1k-10k">1K - 10K</option>
+                                    <option value="10k-100k">10K - 100K</option>
+                                    <option value="100k-1m">100K - 1M</option>
+                                    <option value="1m+">1M+</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="planDuration">Plan Duration</label>
+                                <select id="planDuration" required>
+                                    <option value="7">7 Days</option>
+                                    <option value="14">14 Days</option>
+                                    <option value="30">30 Days</option>
+                                    <option value="60">60 Days</option>
+                                    <option value="90">90 Days</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="goals">Primary Goals</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="goals" value="followers"> Increase Followers
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="goals" value="engagement"> Boost Engagement
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="goals" value="brand-awareness"> Brand Awareness
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="goals" value="sales"> Drive Sales
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="goals" value="community"> Build Community
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="targetAudience">Target Audience</label>
+                            <textarea id="targetAudience" placeholder="Describe your ideal audience (age, interests, demographics, etc.)" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="city">City</label>
+                                <input type="text" id="city" placeholder="e.g., Los Angeles" />
+                            </div>
+                            <div class="form-group">
+                                <label for="state">State</label>
+                                <input type="text" id="state" placeholder="e.g., CA" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contentStyle">Content Style Preferences</label>
+                            <textarea id="contentStyle" placeholder="Describe your preferred content style, tone, and any specific requirements" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="trends">Trend Intake (topics, sounds, challenges, hashtags)</label>
+                            <textarea id="trends" placeholder="List trending topics/sounds/hashtags to incorporate (comma or line separated)" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="captionLength">Caption Length</label>
+                                <select id="captionLength">
+                                    <option value="short">Short</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="long">Long</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label" for="abHooks">
+                                    <input type="checkbox" id="abHooks" checked> Enable A/B Hooks & Captions
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="generate-btn">
+                            <i class="fas fa-magic"></i> Generate Content Plan
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="card">
+                    <div class="results-header">
+                        <h2><i class="fas fa-calendar-alt"></i> Your AI-Generated Content Plan</h2>
+                        <div class="action-buttons">
+                            <button class="btn-secondary" onclick="exportPlan()">
+                                <i class="fas fa-download"></i> Export Plan
+                            </button>
+                            <button class="btn-secondary" onclick="exportCSV()">
+                                <i class="fas fa-file-csv"></i> Export CSV
+                            </button>
+                            <button class="btn-secondary" onclick="exportPDF()">
+                                <i class="fas fa-file-pdf"></i> Export PDF (formatted)
+                            </button>
+                            <button class="btn-secondary" onclick="openPrintCalendar()">
+                                <i class="fas fa-print"></i> Print Calendar (PDF)
+                            </button>
+                            <button class="btn-secondary" onclick="regeneratePlan()">
+                                <i class="fas fa-redo"></i> Regenerate
+                            </button>
+                        </div>
+                        
+                        <div class="downloads-panel" id="downloadsPanel" style="margin-top: 10px; display:none;">
+                            <h3 style="display:flex; align-items:center; gap:8px; font-size: 1rem; margin: 8px 0;">
+                                <i class="fas fa-folder-open"></i> Downloads
+                            </h3>
+                            <div id="downloadsList" style="display:flex; flex-direction:column; gap:6px; font-size: 0.95rem;"></div>
+                        </div>
+                    </div>
+                    
+                    <details class="help-panel" open>
+                        <summary>How to read your plan</summary>
+                        <ul>
+                            <li>Strategy Overview: A quick summary of your niche, selected platforms, goals, audience focus, brand tone, style, and the content pillars your plan is built on.</li>
+                            <li>Calendar Grid: Each tile shows the platform, content type, and pillar for that day. Click any day to see full details.</li>
+                            <li>Day Details: You’ll see Hook(s) A/B, a recommended caption, a short description, hashtags, trends used, and the best posting time.</li>
+                            <li>A/B Hooks: If two hooks appear (A and B), test both versions. Post A to half your audience/time slots and B to the other half; keep the winner next time.</li>
+                            <li>Navigation: Use the arrows above the grid to switch weeks.</li>
+                            <li>Actions: Export Plan = JSON for saving/sharing; Export CSV = spreadsheet for scheduling tools; Export PDF = printable brief; Regenerate = create a fresh variation.</li>
+                            <li>Location (City/State): If provided, your plan may include local references (e.g., hashtags or script cues) for more relevance.</li>
+                        </ul>
+                    </details>
+
+                    <div class="strategy-overview" id="strategyOverview"></div>
+
+                    <div class="legend" id="legend">
+                        <div class="legend-item"><span class="icon">🎤</span><span class="label">Script</span><span class="desc">What to say on camera. A simple outline you can follow.</span></div>
+                        <div class="legend-steps">
+                            <strong>How to use the script:</strong>
+                            <ol>
+                                <li>Hook: Say the first line fast to grab attention (first 3 seconds).</li>
+                                <li>Beats: Show 2–3 steps or tips. Keep it short and clear.</li>
+                                <li>CTA: Tell viewers what to do (like, comment, share, DM).</li>
+                            </ol>
+                            <div class="note">Make it yours: add your city/state or a quick example.</div>
+                        </div>
+                        <div class="legend-item"><span class="icon">📱</span><span class="label">Platform</span><span class="desc">Where you post (Instagram, TikTok, YouTube, etc.)</span></div>
+                        <div class="legend-item"><span class="icon">🎬</span><span class="label">Type</span><span class="desc">What kind of post it is (short video, photo, carousel, live)</span></div>
+                        <div class="legend-item"><span class="icon">🧱</span><span class="label">Pillar</span><span class="desc">The main topic bucket your posts rotate through</span></div>
+                        <div class="legend-item"><span class="icon">⏰</span><span class="label">Best Time</span><span class="desc">When to post for more views</span></div>
+                        <div class="legend-item"><span class="icon">💡</span><span class="label">Hook</span><span class="desc">The first line that grabs attention</span></div>
+                        <div class="legend-item"><span class="icon">✍️</span><span class="label">Caption</span><span class="desc">The words that go with your post</span></div>
+                        <div class="legend-item"><span class="icon">#️⃣</span><span class="label">Hashtags</span><span class="desc">Tags that help people find your post</span></div>
+                        <div class="legend-item"><span class="icon">🔥</span><span class="label">Trends</span><span class="desc">Popular ideas/sounds to ride for more reach</span></div>
+                        <div class="legend-item"><span class="icon">🅰️/🅱️</span><span class="label">A/B Test</span><span class="desc">Two versions. Try both and keep the winner.</span></div>
+                        <div class="legend-script" id="legendScript"></div>
+                     </div>
+                    
+                    <div class="calendar-container">
+                        <div class="calendar-main">
+                            <div class="calendar-header">
+                                <button class="nav-btn" onclick="previousWeek()">&lt;</button>
+                                <h3 id="currentWeek">Week 1</h3>
+                                <button class="nav-btn" onclick="nextWeek()">&gt;</button>
+                            </div>
+                            <div class="calendar-grid" id="calendarGrid"></div>
+                        </div>
+                        <aside class="trending-column">
+                            <h4><i class="fas fa-fire"></i> Trending Topics</h4>
+                            <ul id="trendingList"></ul>
+                        </aside>
+                     </div>
+
+                    <div class="content-details" id="contentDetails"></div>
+                </div>
+            </div>
+        </main>
+
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <h3>AI Agent is analyzing your profile...</h3>
+                <p>Creating your personalized content strategy</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+      // PWA service worker registration
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('sw.js').catch(function(err){
+            console.warn('SW registration failed', err);
+          });
+        });
+      }
+    </script>
+</body>
+</html>

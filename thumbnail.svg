@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1280" height="769" viewBox="0 0 1280 769" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0f17"/>
+      <stop offset="100%" stop-color="#121826"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="20%" cy="-10%" r="60%">
+      <stop offset="0%" stop-color="#7c5cff" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#7c5cff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="85%" cy="0%" r="60%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7c5cff"/>
+      <stop offset="100%" stop-color="#5b8def"/>
+    </linearGradient>
+    <linearGradient id="accent2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#7c5cff"/>
+    </linearGradient>
+    <filter id="softBlur">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="20"/>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    <filter id="cardShadow">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+    <style><![CDATA[
+      .title { font: 800 64px/1.05 Inter, Segoe UI, Roboto, Arial, sans-serif; letter-spacing: 0.5px; }
+      .subtitle { font: 600 26px/1.2 Inter, Segoe UI, Roboto, Arial, sans-serif; fill: #c7ced8; }
+      .features { font: 700 24px/1.25 Inter, Segoe UI, Roboto, Arial, sans-serif; }
+      .tiny { font: 700 16px/1 Inter, Segoe UI, Roboto, Arial, sans-serif; text-transform: uppercase; }
+      .label { font: 800 28px/1 Inter, Segoe UI, Roboto, Arial, sans-serif; }
+      .cta { font: 900 28px/1.1 Inter, Segoe UI, Roboto, Arial, sans-serif; }
+      .mono { font: 700 18px/1.2 Inter, Segoe UI, Roboto, Arial, sans-serif; }
+    ]]></style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="769" fill="url(#bgGrad)"/>
+  <rect width="1280" height="769" fill="url(#glow1)"/>
+  <rect width="1280" height="769" fill="url(#glow2)"/>
+
+  <!-- Decorative blobs -->
+  <circle cx="160" cy="90" r="160" fill="#7c5cff" opacity="0.12" filter="url(#softBlur)"/>
+  <circle cx="1160" cy="120" r="200" fill="#22d3ee" opacity="0.14" filter="url(#softBlur)"/>
+
+  <!-- Left Content -->
+  <g transform="translate(70,120)">
+    <text x="0" y="0" class="title" fill="#ffffff">
+      AI CONTENT PLANNER
+    </text>
+    <text x="0" y="48" class="subtitle">For Influencers & Brands</text>
+
+    <!-- Viral Plan badge -->
+    <g transform="translate(0,90)" filter="url(#shadow)">
+      <rect x="0" y="-38" rx="16" ry="16" width="540" height="72" fill="url(#accent)"/>
+      <text x="24" y="10" class="label" fill="#ffffff">30–90 DAY VIRAL PLAN</text>
+      <g transform="translate(430,-12)">
+        <rect x="0" y="0" rx="12" ry="12" width="100" height="48" fill="#0e1421" stroke="#5b8def" opacity="0.95"/>
+        <text x="16" y="32" class="tiny" fill="#9cc0ff">FAST</text>
+      </g>
+    </g>
+
+    <!-- Feature bullets -->
+    <g transform="translate(0,190)">
+      <g transform="translate(0,0)">
+        <circle cx="12" cy="-6" r="12" fill="url(#accent2)"/>
+        <path d="M6,-6 l5,6 l8,-12" stroke="#0b0f17" stroke-width="4" fill="none"/>
+        <text x="36" y="0" class="features" fill="#e9edf3">Trend Intake • A/B Hooks & Captions</text>
+      </g>
+      <g transform="translate(0,46)">
+        <circle cx="12" cy="-6" r="12" fill="url(#accent)"/>
+        <path d="M6,-6 l5,6 l8,-12" stroke="#0b0f17" stroke-width="4" fill="none"/>
+        <text x="36" y="0" class="features" fill="#e9edf3">CSV / PDF Exports • Ready to Schedule</text>
+      </g>
+      <g transform="translate(0,92)">
+        <circle cx="12" cy="-6" r="12" fill="#10b981"/>
+        <path d="M6,-6 l5,6 l8,-12" stroke="#0b0f17" stroke-width="4" fill="none"/>
+        <text x="36" y="0" class="features" fill="#e9edf3">Tailored by Niche + Platform</text>
+      </g>
+    </g>
+
+    <!-- CTA ribbon -->
+    <g transform="translate(0,300)" filter="url(#shadow)">
+      <rect x="0" y="0" rx="14" ry="14" width="340" height="64" fill="#0e1421" stroke="#22d3ee" stroke-opacity="0.8"/>
+      <text x="22" y="42" class="cta" fill="#bff6ff">ORDER NOW • LIMITED SLOTS</text>
+    </g>
+  </g>
+
+  <!-- Right: App card mockup -->
+  <g transform="translate(720,80)" filter="url(#cardShadow)">
+    <rect x="0" y="0" width="480" height="560" rx="26" ry="26" fill="#0e1421" stroke="#1f2937"/>
+    <!-- Header bar -->
+    <rect x="0" y="0" width="480" height="64" rx="26" ry="26" fill="#0f172a"/>
+    <circle cx="28" cy="32" r="6" fill="#ef4444"/>
+    <circle cx="48" cy="32" r="6" fill="#f59e0b"/>
+    <circle cx="68" cy="32" r="6" fill="#10b981"/>
+    <text x="96" y="40" class="mono" fill="#c7ced8">Your AI-Generated Content Plan</text>
+
+    <!-- Strategy pill -->
+    <g transform="translate(24,84)">
+      <rect x="0" y="0" width="432" height="60" rx="14" ry="14" fill="#0d1320" stroke="#1f2937"/>
+      <text x="18" y="26" class="mono" fill="#9aa4b2">Outputs: 30–90 Day Calendar • A/B Hooks • Captions</text>
+      <text x="18" y="48" class="mono" fill="#9aa4b2">Exports: CSV / PDF • Trend Hashtags • Best Times</text>
+    </g>
+
+    <!-- Platform chips row -->
+    <g transform="translate(24,150)">
+      <g>
+        <rect x="0" y="0" rx="12" ry="12" width="96" height="32" fill="#0d1320" stroke="#1f2937"/>
+        <text x="16" y="22" class="tiny" fill="#9aa4b2">Instagram</text>
+      </g>
+      <g transform="translate(108,0)">
+        <rect x="0" y="0" rx="12" ry="12" width="76" height="32" fill="#0d1320" stroke="#1f2937"/>
+        <text x="16" y="22" class="tiny" fill="#9aa4b2">TikTok</text>
+      </g>
+      <g transform="translate(196,0)">
+        <rect x="0" y="0" rx="12" ry="12" width="92" height="32" fill="#0d1320" stroke="#1f2937"/>
+        <text x="16" y="22" class="tiny" fill="#9aa4b2">YouTube</text>
+      </g>
+      <g transform="translate(300,0)">
+        <rect x="0" y="0" rx="12" ry="12" width="106" height="32" fill="#0d1320" stroke="#1f2937"/>
+        <text x="16" y="22" class="tiny" fill="#9aa4b2">LinkedIn</text>
+      </g>
+    </g>
+
+    <!-- Calendar grid mock -->
+    <g transform="translate(24,200)">
+      <!-- 7 columns x 4 rows -->
+      <g fill="#111a2b" stroke="#1f2937">
+        <rect x="0" y="0" width="56" height="70" rx="10"/>
+        <rect x="64" y="0" width="56" height="70" rx="10"/>
+        <rect x="128" y="0" width="56" height="70" rx="10"/>
+        <rect x="192" y="0" width="56" height="70" rx="10"/>
+        <rect x="256" y="0" width="56" height="70" rx="10"/>
+        <rect x="320" y="0" width="56" height="70" rx="10"/>
+        <rect x="384" y="0" width="56" height="70" rx="10"/>
+
+        <rect x="0" y="80" width="56" height="70" rx="10"/>
+        <rect x="64" y="80" width="56" height="70" rx="10"/>
+        <rect x="128" y="80" width="56" height="70" rx="10"/>
+        <rect x="192" y="80" width="56" height="70" rx="10"/>
+        <rect x="256" y="80" width="56" height="70" rx="10"/>
+        <rect x="320" y="80" width="56" height="70" rx="10"/>
+        <rect x="384" y="80" width="56" height="70" rx="10"/>
+
+        <rect x="0" y="160" width="56" height="70" rx="10"/>
+        <rect x="64" y="160" width="56" height="70" rx="10"/>
+        <rect x="128" y="160" width="56" height="70" rx="10"/>
+        <rect x="192" y="160" width="56" height="70" rx="10"/>
+        <rect x="256" y="160" width="56" height="70" rx="10"/>
+        <rect x="320" y="160" width="56" height="70" rx="10"/>
+        <rect x="384" y="160" width="56" height="70" rx="10"/>
+
+        <rect x="0" y="240" width="56" height="70" rx="10"/>
+        <rect x="64" y="240" width="56" height="70" rx="10"/>
+        <rect x="128" y="240" width="56" height="70" rx="10"/>
+        <rect x="192" y="240" width="56" height="70" rx="10"/>
+        <rect x="256" y="240" width="56" height="70" rx="10"/>
+        <rect x="320" y="240" width="56" height="70" rx="10"/>
+        <rect x="384" y="240" width="56" height="70" rx="10"/>
+      </g>
+
+      <!-- content pills overlay -->
+      <g>
+        <rect x="10" y="16" width="36" height="10" rx="5" fill="#7c5cff"/>
+        <rect x="138" y="20" width="32" height="10" rx="5" fill="#22d3ee"/>
+        <rect x="262" y="18" width="36" height="10" rx="5" fill="#10b981"/>
+        <rect x="330" y="18" width="20" height="10" rx="5" fill="#f59e0b"/>
+
+        <rect x="70" y="98" width="36" height="10" rx="5" fill="#7c5cff"/>
+        <rect x="196" y="98" width="32" height="10" rx="5" fill="#22d3ee"/>
+        <rect x="330" y="98" width="20" height="10" rx="5" fill="#ef4444"/>
+
+        <rect x="6" y="178" width="28" height="10" rx="5" fill="#10b981"/>
+        <rect x="132" y="180" width="36" height="10" rx="5" fill="#7c5cff"/>
+        <rect x="260" y="178" width="36" height="10" rx="5" fill="#22d3ee"/>
+
+        <rect x="72" y="258" width="36" height="10" rx="5" fill="#7c5cff"/>
+        <rect x="198" y="258" width="32" height="10" rx="5" fill="#22d3ee"/>
+        <rect x="336" y="258" width="20" height="10" rx="5" fill="#f59e0b"/>
+      </g>
+    </g>
+
+    <!-- Post brief mock card showing A/B hooks, captions, hashtags, best time -->
+    <g transform="translate(24,380)">
+      <rect x="0" y="0" width="432" height="96" rx="14" ry="14" fill="#0d1320" stroke="#1f2937"/>
+      <text x="16" y="28" class="tiny" fill="#9aa4b2">Post Brief</text>
+      <text x="16" y="50" class="mono" fill="#c7ced8">Hook A: 3 Viral Tips To Grow Faster</text>
+      <text x="16" y="72" class="mono" fill="#9aa4b2">Hook B: Steal These 3 Growth Secrets</text>
+      <g transform="translate(300,12)">
+        <rect x="0" y="0" rx="10" ry="10" width="116" height="24" fill="#0e1421" stroke="#22d3ee"/>
+        <text x="12" y="18" class="tiny" fill="#bff6ff">Best Time: 6 PM</text>
+      </g>
+      <g transform="translate(280,56)">
+        <rect x="0" y="-16" rx="8" ry="8" width="60" height="22" fill="#111a2b" stroke="#1f2937"/>
+        <text x="10" y="0" class="tiny" fill="#9aa4b2">#niche</text>
+        <rect x="66" y="-16" rx="8" ry="8" width="70" height="22" fill="#111a2b" stroke="#1f2937"/>
+        <text x="76" y="0" class="tiny" fill="#9aa4b2">#trend</text>
+      </g>
+    </g>
+
+    <!-- Bottom badges -->
+    <g transform="translate(24,480)">
+      <rect x="0" y="0" rx="10" ry="10" width="156" height="40" fill="#0d1320" stroke="#1f2937"/>
+      <text x="16" y="26" class="tiny" fill="#9aa4b2">A/B Hooks + Captions</text>
+      <rect x="172" y="0" rx="10" ry="10" width="120" height="40" fill="#0d1320" stroke="#1f2937"/>
+      <text x="188" y="26" class="tiny" fill="#9aa4b2">CSV / PDF</text>
+      <rect x="300" y="0" rx="10" ry="10" width="156" height="40" fill="#0d1320" stroke="#1f2937"/>
+      <text x="316" y="26" class="tiny" fill="#9aa4b2">Trend Intake</text>
+    </g>
+  </g>
+
+  <!-- Corner trust badge -->
+  <g transform="translate(1010,24)" filter="url(#shadow)">
+    <rect x="0" y="0" width="246" height="48" rx="12" ry="12" fill="#0e1421" stroke="#22d3ee"/>
+    <text x="16" y="32" class="tiny" fill="#bff6ff">PRO SELLER • 5★ RATED SERVICE</text>
+  </g>
+</svg>
