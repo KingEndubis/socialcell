@@ -571,6 +571,33 @@ function previousWeek() {
   renderPlan();
 }
 
+function nextWeek() {
+  if (!state.plan) return;
+  const lastIdx = Math.max(0, (state.plan.calendar?.length || 1) - 1);
+  state.currentWeekIndex = Math.min(lastIdx, state.currentWeekIndex + 1);
+  renderPlan();
+}
+
+function exportPlan() {
+  if (!state.plan) return;
+  const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  const defaultName = `content-plan-${ts}.json`;
+  const json = JSON.stringify(state.plan, null, 2);
+  saveWithDialog(defaultName, json, 'JSON');
+}
+
+function regeneratePlan() {
+  if (!state.plan) return;
+  const inputs = state.plan.inputs;
+  try { showLoading(true); } catch {}
+  setTimeout(() => {
+    createPlan(inputs);
+    state.currentWeekIndex = 0;
+    renderPlan();
+    try { showLoading(false); } catch {}
+  }, 400);
+}
+
 function csvEscape(value) {
   if (value == null) return '';
   const v = String(value);
@@ -796,9 +823,34 @@ ${style}
     const a = document.createElement('a');
     a.href = url; a.target = '_blank'; a.rel = 'noopener';
     document.body.appendChild(a); a.click();
-    setTimeout(() => { try { document.body.removeChild(a); } catch {}; URL.revokeObjectURL(url); }, 0);
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+    return;
   } catch (e) {
-    alert('Unable to open Export HTML. Please allow pop-ups and try again.');
+    // continue to fallback
+  }
+
+  // Fallback 1: anchor download to new tab (often allowed by blockers on user gesture)
+  try {
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = defaultPath;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+    // We won't know the real OS path; show label as the file name
+    addDownloadItem(defaultPath, defaultPath);
+    return defaultPath;
+  } catch (err) {
+    alert('Failed to save (fallback): ' + (err?.message || err));
+    return null;
   }
 }
 
@@ -1026,9 +1078,7 @@ function handleGenerate(e) {
     createPlan(inputs);
     state.currentWeekIndex = 0;
     renderPlan();
-    const resultsEl = $("resultsSection");
-    if (resultsEl) resultsEl.style.display = 'block';
-    showLoading(false);
+    try { showLoading(false); } catch {}
   }, 400);
 }
 
@@ -1234,10 +1284,6 @@ function openPrintCalendar() {
       html, body { background: var(--paper); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, 'Helvetica Neue', sans-serif; }
       body { margin: 0; padding: 24px; }
       header { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; }
-      h1 { font-size: 22px; margin: 0; font-weight: 800; }
-      h2 { font-size: 16px; margin: 18px 0 8px; color: var(--accent); }
-      .meta { color: var(--muted); font-size: 12px; }
-      .toolbar { position: sticky; top: 0; display:flex; gap:8px; margin-bottom: 12px; }
-      .toolbar
+      h1 { font-size: 22px; margin: 0
 
 
