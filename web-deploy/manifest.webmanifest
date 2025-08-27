@@ -1,0 +1,25 @@
+{
+  "name": "Social Media AI Agent",
+  "short_name": "SM AI Agent",
+  "description": "Plan, script, and export viral-ready content calendars across platforms.",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#0b0f17",
+  "icons": [
+    {
+      "src": "build/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "build/brand.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

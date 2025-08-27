@@ -1,0 +1,73 @@
+Social Media AI Agent — Web Upload and Phone Install Guide
+
+Files to upload to GitHub (drag-and-drop)
+Upload ONLY these from: C:\Users\emory\social media content
+
+1) index.html
+2) styles.css
+3) script.js
+4) manifest.webmanifest
+5) sw.js
+6) thumbnail.svg (optional)
+7) build\ (entire folder — includes brand.svg and icon.svg)
+
+Do NOT upload desktop/Electron build files to the web repo
+- dist\ (all of it)
+- main.js, preload.js
+- package.json, package-lock.json
+- scripts\ (PowerShell/Node build scripts)
+
+Step 1 — Upload files to your GitHub repo
+- Open: https://github.com/KingEndubis/socialcell
+- Click: “uploading an existing file” (or Add file > Upload files)
+- Drag in the items listed above (including the entire build\ folder)
+- Commit directly to the main branch
+
+Step 2 — Enable GitHub Pages (makes it live on the web)
+- Repo > Settings > Pages
+- Build and deployment: Deploy from a branch
+- Branch: main, Folder: /root, Save
+- Wait ~1–2 minutes for the site to publish at:
+  https://kingendubis.github.io/socialcell/
+
+Step 3 — Install it on your phone
+- iPhone (Safari):
+  1) Open your URL
+  2) Tap Share
+  3) Add to Home Screen
+  4) Open from the Home Screen (full-screen app mode)
+- Android (Chrome):
+  1) Open your URL
+  2) If prompted, tap Install; or open menu (⋮) > Install app
+  3) Open from the Home Screen (standalone app)
+
+Step 4 — Quick smoke test
+- Open the live app on phone and desktop
+- Generate a content plan and navigate the calendar
+- Tap Export PDF (formatted) — choose Save/Share as PDF
+- Tap Export CSV — confirm it downloads
+- Turn on Airplane Mode and reload — app shell should still load (offline caching)
+
+How updates get live
+- Edit your files locally, then upload/commit changes to GitHub again
+- If changes don’t appear immediately, hard refresh the page
+- If still stuck, bump the cache version in sw.js:
+  - Change const CACHE_NAME = 'sm-ai-agent-v1' to 'sm-ai-agent-v2'
+  - Commit and refresh twice
+
+Optional — Command line push (requires Git for Windows)
+In PowerShell inside C:\Users\emory\social media content:
+  git init
+  git add index.html styles.css script.js manifest.webmanifest sw.js build thumbnail.svg .gitignore
+  git commit -m "Initial web build: PWA-enabled Social Media AI Agent"
+  git branch -M main
+  git remote add origin https://github.com/KingEndubis/socialcell.git
+  git push -u origin main
+
+Troubleshooting
+- PDF export blocked by pop-ups: allow pop-ups for your site
+- No install prompt on Android: visit site twice or use menu > Install app
+- iOS always uses Share > Add to Home Screen for install
+- If the app doesn’t load offline, open it once online first to cache assets
+
+That’s it! Your app is installable, runs offline for the core flow, and exports client-ready PDFs and CSVs.

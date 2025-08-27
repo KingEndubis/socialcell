@@ -1,0 +1,1340 @@
+// Social Media AI Agent - Frontend Logic
+// No external APIs used; uses heuristics and prompt engineering to generate plans
+
+const state = {
+  plan: null,
+  currentWeekIndex: 0,
+  totalWeeks: 0,
+};
+
+const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const PLATFORM_TEMPLATES = {
+  instagram: {
+    frequencyByStage: { starter: 5, grow: 6, scale: 7 },
+    contentMix: [
+      { type: "Reel", ratio: 0.35 },
+      { type: "Carousel", ratio: 0.25 },
+      { type: "Story", ratio: 0.25 },
+      { type: "Static Post", ratio: 0.15 },
+    ],
+    bestTimes: ["9:00", "12:00", "18:00"],
+    hooks: [
+      "You won't believe this...",
+      "Stop scrolling if...",
+      "3 mistakes you're making...",
+      "Nobody talks about this...",
+      "I tried X so you don't have to",
+    ],
+    ctas: [
+      "Follow for more tips",
+      "Save this for later",
+      "Comment 'GUIDE' for the checklist",
+      "Share this with a friend",
+      "Double tap if this helped",
+    ],
+  },
+  tiktok: {
+    frequencyByStage: { starter: 7, grow: 10, scale: 12 },
+    contentMix: [
+      { type: "Trend Remix", ratio: 0.3 },
+      { type: "Educational", ratio: 0.25 },
+      { type: "Behind the Scenes", ratio: 0.2 },
+      { type: "Challenge", ratio: 0.15 },
+      { type: "Duet/Stitch", ratio: 0.1 },
+    ],
+    bestTimes: ["8:00", "12:00", "16:00", "20:00"],
+    hooks: [
+      "No one is telling you this...",
+      "POV: you're trying to...",
+      "If you do this, stop...",
+      "I found the secret to...",
+      "Here's how to go from X to Y",
+    ],
+    ctas: [
+      "Hit follow for daily tips",
+      "Comment for part 2",
+      "Tag someone who needs this",
+      "Save to try this later",
+      "Share to your story",
+    ],
+  },
+  youtube: {
+    frequencyByStage: { starter: 2, grow: 3, scale: 4 },
+    contentMix: [
+      { type: "How-To Tutorial", ratio: 0.35 },
+      { type: "Listicle/Guide", ratio: 0.25 },
+      { type: "Case Study/Story", ratio: 0.2 },
+      { type: "Shorts", ratio: 0.2 },
+    ],
+    bestTimes: ["10:00", "13:00", "17:00"],
+    hooks: [
+      "I wish I knew this earlier...",
+      "The truth about...",
+      "Do this before you...",
+      "X lessons after Y years",
+      "From X to Y: my step-by-step",
+    ],
+    ctas: [
+      "Subscribe for weekly videos",
+      "Comment your question below",
+      "Download the free checklist",
+      "Like if this helped",
+      "Turn on notifications",
+    ],
+  },
+  twitter: {
+    frequencyByStage: { starter: 14, grow: 21, scale: 28 },
+    contentMix: [
+      { type: "Thread", ratio: 0.25 },
+      { type: "One-liners", ratio: 0.35 },
+      { type: "Screenshots/Visuals", ratio: 0.2 },
+      { type: "Engagement Questions", ratio: 0.2 },
+    ],
+    bestTimes: ["8:00", "12:00", "15:00", "18:00"],
+    hooks: [
+      "Here's how I...",
+      "Everyone says X, but...",
+      "I analyzed Y and here's what I found",
+      "If you're struggling with X, read this",
+      "Do this to avoid Y",
+    ],
+    ctas: [
+      "RT to help others",
+      "Follow for more",
+      "Reply with your experience",
+      "Bookmark for later",
+      "DM me 'GUIDE'",
+    ],
+  },
+  linkedin: {
+    frequencyByStage: { starter: 5, grow: 7, scale: 9 },
+    contentMix: [
+      { type: "Story Post", ratio: 0.3 },
+      { type: "How-To", ratio: 0.25 },
+      { type: "Carousel", ratio: 0.25 },
+      { type: "Engagement Question", ratio: 0.2 },
+    ],
+    bestTimes: ["8:30", "12:30", "17:30"],
+    hooks: [
+      "Here's what no one tells you about...",
+      "I made this mistake so you don't have to",
+      "The framework I use for...",
+      "From X to Y in Z months",
+      "If you're in [industry], read this",
+    ],
+    ctas: [
+      "Comment your thoughts",
+      "Follow for more insights",
+      "Share with your team",
+      "Save for your next meeting",
+      "DM me for the template",
+    ],
+  },
+  facebook: {
+    frequencyByStage: { starter: 5, grow: 7, scale: 9 },
+    contentMix: [
+      { type: "Short Video", ratio: 0.3 },
+      { type: "Image + Caption", ratio: 0.3 },
+      { type: "Link Post", ratio: 0.2 },
+      { type: "Live/Q&A", ratio: 0.2 },
+    ],
+    bestTimes: ["9:00", "13:00", "18:00"],
+    hooks: [
+      "We need to talk about...",
+      "This changed everything for me",
+      "If you're doing this, stop now",
+      "Can we be honest about...",
+      "The exact steps to...",
+    ],
+    ctas: [
+      "Like & Follow",
+      "Comment your thoughts",
+      "Share with a friend",
+      "Save for later",
+      "Join the group",
+    ],
+  },
+};
+
+const NICHE_CONTENT_PILLARS = {
+  lifestyle: ["Daily Routines", "Wellness & Productivity", "Favorites/Hauls", "Behind the Scenes", "Relatable Humor"],
+  fitness: ["Workouts", "Nutrition", "Form Tips", "Progress & Challenges", "Mindset"],
+  beauty: ["Makeup Tutorials", "Skincare", "Before/After", "Product Reviews", "Trends"],
+  food: ["Quick Recipes", "Meal Prep", "Budget Meals", "Kitchen Hacks", "Taste Tests"],
+  travel: ["Itineraries", "Hidden Gems", "Budget Tips", "Packing", "Photo Spots"],
+  tech: ["Gadgets", "How-Tos", "App Reviews", "Automation", "AI Tips"],
+  business: ["Playbooks", "Case Studies", "Frameworks", "Tools", "Founder Stories"],
+  education: ["Micro-lessons", "Study Hacks", "Frameworks", "Quizzes", "Resources"],
+  entertainment: ["Skits", "Reactions", "Trends", "Behind the Scenes", "Collaborations"],
+  parenting: ["Daily Routines", "Tips & Hacks", "Activities", "Meal Ideas", "Honest Moments"],
+  finance: ["Budgeting", "Investing", "Side Hustles", "Credit Tips", "Mistakes"],
+  diy: ["Tutorials", "Materials", "Before/After", "Time-lapse", "Fails & Fixes"],
+  gaming: ["Highlights", "How-Tos", "Setups", "Reviews", "Esports Commentary"],
+  music: ["Covers", "Originals", "Gear", "Behind the Music", "Practice Routines"],
+  art: ["Process", "Sketchbook", "Tools", "Time-lapse", "Commissions"],
+  realestate: ["Listing Highlights", "Neighborhood Tours", "Market Updates", "Buyer Tips", "Seller Tips"],
+};
+
+function $(id) { return document.getElementById(id); }
+
+function showLoading(show) {
+  const overlay = $("loadingOverlay");
+  if (overlay) {
+    overlay.style.display = show ? "flex" : "none";
+  }
+}
+
+function getSelectedValues(name) {
+  return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(i => i.value);
+}
+
+function stageFromFollowers(range) {
+  switch(range) {
+    case "0-1k": return "starter";
+    case "1k-10k": return "starter";
+    case "10k-100k": return "grow";
+    case "100k-1m": return "scale";
+    case "1m+": return "scale";
+    default: return "starter";
+  }
+}
+
+function randomPick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+function slugify(str) { return str.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+function unique(arr){ return Array.from(new Set((arr||[]).filter(Boolean))); }
+
+// Industry trend library (heuristic, updated periodically)
+const TREND_LIBRARY = {
+  lifestyle: { global: ["Routines","AM/PM reset","Habit stacking","Minimalism","Wellness swaps"], instagram:["Day in the life","Sunday reset"], tiktok:["GRWM","Aesthetic desk"], youtube:["Morning routine","Night routine"], linkedin:["Work-life balance"] },
+  fitness: { global: ["Zone 2","Progressive overload","30g protein","Mobility","Pilates"], instagram:["Workout split","Form tips"], tiktok:["75 Hard","Hot girl walk","Pilates"], youtube:["Full day of eating","Push Pull Legs"], linkedin:["Wellness at work"] },
+  beauty: { global: ["Skin cycling","Retinol sandwich","Glazed skin","Brow lamination"], instagram:["Get ready with me"], tiktok:["Blush draping","Clean girl"], youtube:["Dupe comparisons","Before & After"], linkedin:["Brand storytelling"] },
+  food: { global: ["High-protein recipes","Meal prep","Air fryer","5-ingredient","Budget meals"], instagram:["Recipe reels"], tiktok:["What I eat in a day"], youtube:["Meal prep guide"], linkedin:["Food biz ops"] },
+  travel: { global: ["Hidden gems","Itineraries","Travel hacks","Carry-on only"], instagram:["Photo spots"], tiktok:["Travel transitions"], youtube:["City guide"], linkedin:["Remote work travel"] },
+  tech: { global: ["AI tools","Automation","No-code","Productivity stack"], instagram:["App carousels"], tiktok:["Prompt hacks"], youtube:["Tool breakdowns"], linkedin:["SaaS playbooks","B2B content"] },
+  business: { global: ["Personal branding","UGC","Cold DM","Offer building","Notion templates"], instagram:["Carousel frameworks"], tiktok:["One-person business"], youtube:["Case studies"], linkedin:["Founder stories","Hiring"] },
+  education: { global: ["Study with me","Flashcards","Pomodoro","AI tutors"], instagram:["Carousel lessons"], tiktok:["Note templates"], youtube:["Deep dives"], linkedin:["L&D tips"] },
+  entertainment: { global: ["Reaction","Duets","Memes","Behind the scenes"], instagram:["Short skits"], tiktok:["Trend remix"], youtube:["Commentary"], linkedin:["Creator economy"] },
+  parenting: { global: ["Routines","Activities","Meal ideas","Honest moments"], instagram:["Toddler hacks"], tiktok:["Day in the life"], youtube:["Tips & tricks"], linkedin:["Work + parenthood"] },
+  finance: { global: ["Budgeting","Investing","Side hustles","Credit hacks"], instagram:["Money carousels"], tiktok:["Paycheck breakdown"], youtube:["How to invest"], linkedin:["Wealth building"] },
+  diy: { global: ["Before/After","Tutorials","Time-lapse","Thrift flips"], instagram:["Project reels"], tiktok:["Satisfying builds"], youtube:["Tool guides"], linkedin:["Makers"] },
+  gaming: { global: ["Highlights","Setups","Esports","New releases"], instagram:["Clip reels"], tiktok:["Montages"], youtube:["Reviews"], linkedin:["Games industry"] },
+  music: { global: ["Covers","Originals","Gear","Practice routines"], instagram:["Reels covers"], tiktok:["Duets"], youtube:["Behind the song"], linkedin:["Music biz"] },
+  art: { global: ["Process","Sketchbook","Time-lapse","Inktober"], instagram:["Reels process"], tiktok:["Satisfying timelapse"], youtube:["Tutorials"], linkedin:["Creative process"] },
+  realestate: { global: ["Open house tours","Before & After","Staging tips","Interest rates","First-time buyers","House hacking"], instagram:["Listing highlights","Buyer checklist carousels"], tiktok:["POV home tours","Zillow finds","Offer myths"], youtube:["Neighborhood guides","Market updates"], linkedin:["Market reports","Agent branding"] },
+};
+
+function analyzeBranding(inputs){
+  const style = (inputs.contentStyle||'').toLowerCase();
+  const audience = (inputs.targetAudience||'').toLowerCase();
+  let tone = 'neutral';
+  if (/(professional|b2b|corporate|formal|linkedin|executive)/.test(style) || /b2b|founder|saas|team|agency/.test(audience)) tone = 'professional';
+  else if (/(luxury|premium|minimal|elegant|high-end)/.test(style)) tone = 'luxury';
+  else if (/(eco|sustainable|green|ethical|climate)/.test(style)) tone = 'eco';
+  else if (/(edgy|bold|controversial|hot take)/.test(style)) tone = 'edgy';
+  else if (/(playful|fun|quirky|casual|emoji|gen z)/.test(style)) tone = 'playful';
+
+  let audienceTag = 'general';
+  if (/b2b|founder|startup|saas|agency|enterprise/.test(audience)) audienceTag='b2b';
+  else if (/gen z|18-24|students|college|teen/.test(audience)) audienceTag='genz';
+  else if (/millennial|25-34|young professional/.test(audience)) audienceTag='millennial';
+  else if (/parents|moms|dads|family/.test(audience)) audienceTag='parents';
+
+  return { tone, audienceTag };
+}
+
+function suggestTrends(inputs){
+  const lib = TREND_LIBRARY[inputs.niche] || {};
+  const platforms = inputs.platforms || [];
+  const sourceLists = [lib.global||[]];
+  platforms.forEach(p => { if (lib[p]) sourceLists.push(lib[p]); });
+  const combined = unique([].concat(...sourceLists));
+  // limit suggestions to top 6 to keep captions clean
+  return combined.slice(0, 6);
+}
+
+function generateStrategyOverview(inputs) {
+  const pillars = NICHE_CONTENT_PILLARS[inputs.niche] || ["Value", "Story", "Community", "Promotion", "Trends"];
+  const trendLine = inputs.trends?.length ? `Trends integrated: ${inputs.trends.join(' • ')}` : 'Trends integrated: User-specified when provided';
+  const brandTone = inputs.brandProfile?.tone ? inputs.brandProfile.tone : 'Neutral';
+  const audienceFocus = inputs.brandProfile?.audienceTag ? inputs.brandProfile.audienceTag : (inputs.targetAudience || 'General');
+  const autoTrendsLine = inputs.autoTrends?.length ? `Auto trend suggestions: ${inputs.autoTrends.join(' • ')}` : null;
+  const lines = [
+    `Niche: ${inputs.nicheLabel}`,
+    `Primary Platforms: ${inputs.platforms.map(p=>p.toUpperCase()).join(', ')}`,
+    `Goals: ${inputs.goals.join(', ') || 'General Growth'}`,
+    `Audience: ${audienceFocus}`,
+    `Brand Tone: ${brandTone}`,
+    `Style: ${inputs.contentStyle || 'Educational, Story-driven, Authentic'}`,
+    `Content Pillars: ${pillars.join(' • ')}`,
+    trendLine,
+    autoTrendsLine,
+    `Cadence: Optimized per platform and stage to maximize reach and retention`,
+  ].filter(Boolean);
+  return `<ul>${lines.map(l=>`<li>${l}</li>`).join('')}</ul>`;
+}
+
+function buildDailyPostingSlots(platforms, stage) {
+  // Determine baseline frequency per platform per week
+  const weeklyPlan = {};
+  platforms.forEach(p => {
+    const tpl = PLATFORM_TEMPLATES[p];
+    if (!tpl) return;
+    weeklyPlan[p] = tpl.frequencyByStage[stage] || 5;
+  });
+
+  // Distribute posts across 7 days
+  const days = Array.from({ length: 7 }, () => []);
+  Object.entries(weeklyPlan).forEach(([platform, freq]) => {
+    for (let i=0;i<freq;i++) {
+      const dayIndex = Math.floor(i * 7 / freq); // spread out
+      days[dayIndex].push(platform);
+    }
+  });
+  return days; // array of 7 arrays of platforms
+}
+
+function weightedPick(weightedArr) {
+  const total = weightedArr.reduce((sum, i) => sum + i.ratio, 0);
+  const r = Math.random() * total;
+  let acc = 0;
+  for (const item of weightedArr) {
+    acc += item.ratio;
+    if (r <= acc) return item.type;
+  }
+  return weightedArr[0].type;
+}
+
+function generateDescription(platform, type, pillar, hook, goalTag, trends) {
+  const trendSuffix = trends && trends.length ? ` Incorporates trend: ${trends[0]}.` : '';
+  const formats = {
+    instagram: `${hook} Quick ${pillar.toLowerCase()} breakdown. Step-by-step inside. [${goalTag}]${trendSuffix}`,
+    tiktok: `${hook} Watch till the end for the exact steps. ${pillar} made simple. [${goalTag}]${trendSuffix}`,
+    youtube: `${hook} In this video, I walk through ${pillar.toLowerCase()} with a complete, practical framework so you can apply it today. [${goalTag}]${trendSuffix}`,
+    twitter: `${hook} Thread: ${pillar} — actionable insights. [${goalTag}]${trendSuffix}`,
+    linkedin: `${hook} Here's the framework I use for ${pillar.toLowerCase()}. Save this for your next project. [${goalTag}]${trendSuffix}`,
+    facebook: `${hook} Here's exactly how to approach ${pillar.toLowerCase()} with simple steps. [${goalTag}]${trendSuffix}`,
+  };
+  return formats[platform] || `${hook} ${pillar}.${trendSuffix}`;
+}
+
+function generateHashtags(niche, pillar, platform, extra=[], brandProfile) {
+  const base = [niche, pillar, 'content', 'tips', 'guide', 'howto', 'viral', 'growth'];
+  const brandTags = brandProfile?.tone === 'eco' ? ['sustainable','ecofriendly']
+    : brandProfile?.tone === 'luxury' ? ['luxury','premium']
+    : brandProfile?.tone === 'professional' ? ['b2b','strategy']
+    : [];
+  const trendTags = (extra||[]).map(t => t.startsWith('#') ? t : `#${slugify(t)}`);
+  const pf = (platform === 'twitter' || platform === 'linkedin') ? [] : [...base.map(s => `#${slugify(s)}`), ...brandTags.map(s=>`#${slugify(s)}`), ...trendTags];
+  return pf.slice(0, 10).join(' ');
+}
+
+function generateHookVariants(tplHooks, niche, pillar, trends, goals, brandProfile) {
+  const proTemplates = [
+    `${pillar}: a practical framework that works`,
+    `How to improve ${pillar.toLowerCase()} with proven steps`,
+    `${pillar} playbook for consistent results`,
+  ];
+  const playfulTemplates = [
+    `Steal my ${pillar} framework (save this)`,
+    `${pillar} made simple — step-by-step`,
+    `From zero to ${pillar} pro: do this`,
+  ];
+  const luxuryTemplates = [
+    `${pillar} refined: a minimal, high-impact approach`,
+    `The premium guide to ${pillar.toLowerCase()}`,
+  ];
+  const ecoTemplates = [
+    `${pillar} with a sustainable twist`,
+    `Eco-friendly ${pillar.toLowerCase()} framework`,
+  ];
+  const edgyTemplates = [
+    `${pillar} myths, busted`,
+    `Unpopular opinion: you're doing ${pillar.toLowerCase()} wrong`,
+  ];
+  let pool = playfulTemplates;
+  switch(brandProfile?.tone){
+    case 'professional': pool = proTemplates; break;
+    case 'luxury': pool = luxuryTemplates; break;
+    case 'eco': pool = ecoTemplates; break;
+    case 'edgy': pool = edgyTemplates; break;
+    default: pool = playfulTemplates; break;
+  }
+  const a = randomPick(tplHooks);
+  const b = randomPick(pool);
+  const trend = trends && trends.length ? trends[Math.floor(Math.random()*trends.length)] : null;
+  return { a: trend ? `${a} • Using ${trend}` : a, b };
+}
+
+function generateCaption(platform, type, pillar, hook, goalTag, length, variantLabel, trends, brandProfile) {
+  const trendNote = trends && trends.length ? ` Using ${trends[0]} for reach.` : '';
+  const defaultMap = {
+    Reach: 'Follow for more like this',
+    Engagement: 'What would you add? Comment below',
+    Conversion: 'DM me “GUIDE” for the checklist',
+    Brand: 'Save and share this with a friend',
+  };
+  const toneMaps = {
+    professional: {
+      Reach: 'Follow for weekly insights',
+      Engagement: 'What would you add? Comment below',
+      Conversion: 'Book a call or DM “DEMO” for details',
+      Brand: 'Share with your team',
+    },
+    luxury: {
+      Reach: 'Discover more refined strategies',
+      Engagement: 'Which detail stood out? Comment below',
+      Conversion: 'Join the waitlist or inquire via DM',
+      Brand: 'Save this for your next campaign',
+    },
+    eco: {
+      Reach: 'Follow for sustainable growth tips',
+      Engagement: 'How would you make this greener?',
+      Conversion: 'DM “ECO” for the checklist',
+      Brand: 'Share to inspire sustainable choices',
+    },
+    playful: {
+      Reach: 'Follow for daily tips ✨',
+      Engagement: 'Drop your take ⬇️',
+      Conversion: 'DM “GUIDE” and I’ll send it 🤝',
+      Brand: 'Save + share with a friend 💾',
+    },
+    edgy: {
+      Reach: 'Follow if you want the real playbook',
+      Engagement: 'Agree or disagree? Sound off',
+      Conversion: 'DM “PLAYBOOK” for the template',
+      Brand: 'Save this before it gets deleted',
+    }
+  };
+  const toneMap = toneMaps[brandProfile?.tone] || defaultMap;
+  const bodyShort = `${hook} ${pillar} in ${type.toLowerCase()} format.${trendNote}`;
+  const bodyMedium = `${hook} Here’s a quick ${pillar.toLowerCase()} framework you can apply today: 1) Do this 2) Avoid that 3) Save for later.${trendNote}`;
+  const bodyLong = `${hook} In this ${type.toLowerCase()}, I break down ${pillar.toLowerCase()} with practical steps, mistakes to avoid, and a simple template you can copy. Bookmark this so you can execute today and track your progress over the next week.${trendNote}`;
+  const pick = length === 'short' ? bodyShort : length === 'long' ? bodyLong : bodyMedium;
+  return `${pick} ${toneMap[goalTag] || defaultMap[goalTag] || ''}`.trim();
+}
+
+function generatePostIdea(niche, platform, goals, options) {
+  const tpl = PLATFORM_TEMPLATES[platform];
+  const pillars = NICHE_CONTENT_PILLARS[niche] || ["Value", "Story", "Community", "Promotion", "Trends"];
+  const mix = tpl.contentMix;
+  const type = weightedPick(mix);
+  const pillar = randomPick(pillars);
+
+  const goalTag = goals.includes('sales') ? 'Conversion' : goals.includes('engagement') ? 'Engagement' : goals.includes('followers') ? 'Reach' : 'Brand';
+  const hooks = options.abHooks ? generateHookVariants(tpl.hooks, niche, pillar, options.trends, goals, options.brandProfile) : { a: randomPick(tpl.hooks), b: null };
+
+  const bestTime = randomPick(tpl.bestTimes);
+  const hashtags = generateHashtags(niche, pillar, platform, options.trends, options.brandProfile);
+
+  const descriptionA = generateDescription(platform, type, pillar, hooks.a, goalTag, options.trends);
+  const captionA = generateCaption(platform, type, pillar, hooks.a, goalTag, options.captionLength, 'A', options.trends, options.brandProfile);
+
+  let descriptionB = null, captionB = null;
+  if (options.abHooks && hooks.b) {
+    descriptionB = generateDescription(platform, type, pillar, hooks.b, goalTag, options.trends);
+    captionB = generateCaption(platform, type, pillar, hooks.b, goalTag, options.captionLength, 'B', options.trends, options.brandProfile);
+  }
+
+  return {
+    platform,
+    type,
+    pillar,
+    goalTag,
+    bestTime,
+    hashtags,
+    // A/B hooks and captions
+    hookA: hooks.a,
+    captionA,
+    descriptionA,
+    hookB: hooks.b,
+    captionB,
+    descriptionB,
+    trendsUsed: options.trends || [],
+  };
+}
+
+function createPlan(inputs) {
+  const weeks = Math.ceil(inputs.duration / 7);
+  state.totalWeeks = weeks;
+  const stage = stageFromFollowers(inputs.currentFollowers);
+
+  // Branding + trend enrichment
+  const brandProfile = analyzeBranding(inputs);
+  const autoTrends = suggestTrends(inputs);
+  const trendsCombined = unique([...(inputs.trends||[]), ...autoTrends]);
+  const enrichedInputs = { ...inputs, brandProfile, trends: trendsCombined, autoTrends };
+
+  const weeklySlots = buildDailyPostingSlots(enrichedInputs.platforms, stage);
+  const calendar = [];
+  let dayCounter = 1;
+
+  for (let w=0; w<weeks; w++) {
+    const week = [];
+    for (let d=0; d<7; d++) {
+      const platformsForDay = weeklySlots[d] || [];
+      const ideas = platformsForDay.map(p => generatePostIdea(enrichedInputs.niche, p, enrichedInputs.goals, {
+        trends: enrichedInputs.trends,
+        captionLength: enrichedInputs.captionLength,
+        abHooks: enrichedInputs.abHooks,
+        brandProfile,
+      }));
+      week.push({ dayNumber: dayCounter, weekday: WEEK_DAYS[d], ideas });
+      dayCounter++;
+    }
+    calendar.push(week);
+  }
+
+  // Strategy overview
+  const strategyHTML = generateStrategyOverview(enrichedInputs);
+
+  state.plan = { inputs: enrichedInputs, calendar, strategyHTML };
+}
+
+function renderPlan() {
+  if (!state.plan) return;
+  const { calendar, strategyHTML } = state.plan;
+  const weekIndex = state.currentWeekIndex;
+  $("currentWeek").textContent = `Week ${weekIndex + 1}`;
+
+  // Overview
+  $("strategyOverview").innerHTML = strategyHTML;
+
+  // Calendar grid
+  const week = calendar[weekIndex];
+  const grid = $("calendarGrid");
+  grid.innerHTML = '';
+  week.forEach(day => {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'day-card';
+    const header = `<div class=\"day-header\"><span>${day.weekday}</span><span>Day ${day.dayNumber}</span></div>`;
+    const items = day.ideas.map(idea => `<span class=\"content-pill\"><span class=\"platform\">${idea.platform.toUpperCase()}</span>${idea.type} • ${idea.pillar}</span>`).join('');
+    dayEl.innerHTML = header + items;
+    dayEl.addEventListener('click', () => showDayDetails(day));
+    grid.appendChild(dayEl);
+  });
+
+  // Details default to the first day
+  showDayDetails(week[0]);
+}
+
+function showDayDetails(day) {
+  const container = $("contentDetails");
+  container.innerHTML = day.ideas.map((idea) => {
+    const abBlock = idea.hookB ? `
+      <div class=\"content-item\">\n        <h4>Variant B: ${idea.hookB}</h4>\n        <div class=\"meta\">Caption B</div>\n        <p>${idea.captionB}</p>\n        ${idea.descriptionB ? `<p>${idea.descriptionB}</p>` : ''}\n        ${idea.scriptB ? `<div class=\"meta\">Creator Script B</div><p>${idea.scriptB.replace(/\n/g,'<br/>')}</p>` : ''}\n      </div>` : '';
+
+    return `<div class=\"content-item\">\n      <h4>${idea.hookA}</h4>\n      <div class=\"meta\">Platform: ${idea.platform.toUpperCase()} • Best Time: ${idea.bestTime} • Goal: ${idea.goalTag} • Pillar: ${idea.pillar}</div>\n      <p>${idea.captionA}</p>\n      <p>${idea.descriptionA}</p>\n      ${idea.hashtags ? `<p>${idea.hashtags}</p>` : ''}\n      ${idea.trendsUsed?.length ? `<p><strong>Trends:</strong> ${idea.trendsUsed.join(' • ')}</p>` : ''}\n    </div>${abBlock}`;
+  }).join('');
+
+  // Inject a simple day script preview into the legend area
+  const legendScript = $("legendScript");
+  if (legendScript) {
+    const preview = day.ideas.map(idea => {
+      const parts = [];
+      if (idea.scriptA) {
+        parts.push(`<div class=\"preview-block\"><div class=\"meta\">Script A (${idea.platform.toUpperCase()} • ${idea.type})</div><p>${idea.scriptA.replace(/\n/g,'<br/>')}</p></div>`);
+      }
+      if (idea.scriptB) {
+        parts.push(`<div class=\"preview-block\"><div class=\"meta\">Script B (${idea.platform.toUpperCase()} • ${idea.type})</div><p>${idea.scriptB.replace(/\n/g,'<br/>')}</p></div>`);
+      }
+      return parts.join('');
+    }).join('');
+    legendScript.innerHTML = preview || '<em>No script for this day.</em>';
+  }
+}
+
+function previousWeek() {
+  if (state.currentWeekIndex > 0) {
+    state.currentWeekIndex--;
+    renderPlan();
+  }
+}
+
+function nextWeek() {
+  if (state.currentWeekIndex < state.totalWeeks - 1) {
+    state.currentWeekIndex++;
+    renderPlan();
+  }
+}
+
+function exportPlan() {
+  if (!state.plan) return;
+  const { inputs, calendar } = state.plan;
+  const data = {
+    generatedAt: new Date().toISOString(),
+    inputs,
+    calendar,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `content-plan-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function csvEscape(value) {
+  if (value == null) return '';
+  const v = String(value);
+  if (/[",\n]/.test(v)) {
+    return '"' + v.replace(/"/g, '""') + '"';
+  }
+  return v;
+}
+
+function exportCSV() {
+  if (!state.plan) return;
+  const rows = [];
+  const header = [
+    'Week','Day Number','Weekday','Platform','Type','Pillar','Best Time','Goal','Hook A','Caption A','Hook B','Caption B','Hashtags','Trends'
+  ];
+  rows.push(header.join(','));
+
+  state.plan.calendar.forEach((week, wIdx) => {
+    week.forEach(day => {
+      day.ideas.forEach(idea => {
+        const row = [
+          `Week ${wIdx+1}`,
+          day.dayNumber,
+          day.weekday,
+          idea.platform.toUpperCase(),
+          idea.type,
+          idea.pillar,
+          idea.bestTime,
+          idea.goalTag,
+          idea.hookA || '',
+          idea.captionA || '',
+          idea.hookB || '',
+          idea.captionB || '',
+          idea.hashtags || '',
+          (idea.trendsUsed||[]).join(' | '),
+        ].map(csvEscape);
+        rows.push(row.join(','));
+      });
+    });
+  });
+
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `content-plan-${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportPDF() {
+  if (!state.plan) return;
+  const win = window.open('', '_blank');
+  const { inputs, calendar } = state.plan;
+  const style = `
+    <style>
+      @page { margin: 16mm; }
+      body { font-family: Arial, sans-serif; color: #000; background: #fff; padding: 16px; }
+      h1 { font-size: 18px; margin: 0 0 8px 0; }
+      .meta { font-size: 11px; margin-bottom: 12px; }
+      pre { white-space: pre-wrap; word-wrap: break-word; font-family: Consolas, 'Courier New', monospace; font-size: 11px; line-height: 1.4; }
+      .no-print { display: block; margin-top: 12px; }
+      @media print { .no-print { display: none; } }
+    </style>
+  `;
+
+  const esc = (s) => String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  const lines = [];
+  if (inputs) {
+    const platforms = (inputs.platforms || []).join(', ');
+    const niche = inputs.niche || '';
+    const stage = inputs.growthStage || '';
+    const location = [inputs.city, inputs.state].filter(Boolean).join(', ');
+    lines.push('Overview');
+    if (niche) lines.push(`Niche: ${niche}`);
+    if (stage) lines.push(`Growth Stage: ${stage}`);
+    if (platforms) lines.push(`Platforms: ${platforms}`);
+    if (location) lines.push(`Location: ${location}`);
+  }
+  lines.push('');
+  lines.push('Calendar Details');
+  calendar.forEach((week, wIdx) => {
+    lines.push('');
+    lines.push(`Week ${wIdx + 1}`);
+    week.forEach(day => {
+      day.ideas.forEach((idea, idx) => {
+        lines.push(`- Day ${day.dayNumber} (${day.weekday}) • Idea ${idx + 1}`);
+        lines.push(`  Platform: ${idea.platform.toUpperCase()}`);
+        lines.push(`  Type: ${idea.type}`);
+        lines.push(`  Pillar: ${idea.pillar}`);
+        lines.push(`  Best Time: ${idea.bestTime}`);
+        lines.push(`  Goal: ${idea.goalTag}`);
+        if (idea.hookA) lines.push(`  Hook A: ${idea.hookA}`);
+        if (idea.hookB) lines.push(`  Hook B: ${idea.hookB}`);
+        if (idea.captionA) lines.push(`  Caption A: ${idea.captionA}`);
+        if (idea.captionB) lines.push(`  Caption B: ${idea.captionB}`);
+        if (idea.hashtags) lines.push(`  Hashtags: ${idea.hashtags}`);
+        const trends = (idea.trendsUsed || []).join(', ');
+        if (trends) lines.push(`  Trends: ${trends}`);
+        if (idea.scriptA) {
+          lines.push('  Script A:');
+          String(idea.scriptA).split('\n').forEach(line => lines.push(`    ${line}`));
+        }
+        if (idea.scriptB) {
+          lines.push('  Script B:');
+          String(idea.scriptB).split('\n').forEach(line => lines.push(`    ${line}`));
+        }
+        lines.push('');
+      });
+    });
+  });
+
+  // Add legend at the end
+  lines.push('');
+  lines.push('LEGEND & GLOSSARY');
+  lines.push('================');
+  lines.push('Script: What to say on camera. A simple outline you can follow.');
+  lines.push('  How to use the script:');
+  lines.push('  1. Hook: Say the first line fast to grab attention (first 3 seconds).');
+  lines.push('  2. Beats: Show 2-3 steps or tips. Keep it short and clear.');
+  lines.push('  3. CTA: Tell viewers what to do (like, comment, share, DM).');
+  lines.push('  Make it yours: add your city/state or a quick example.');
+  lines.push('');
+  lines.push('Platform: Where you post (Instagram, TikTok, YouTube, etc.)');
+  lines.push('Type: What kind of post it is (short video, photo, carousel, live)');
+  lines.push('Pillar: The main topic bucket your posts rotate through');
+  lines.push('Best Time: When to post for more views');
+  lines.push('Hook: The first line that grabs attention');
+  lines.push('Caption: The words that go with your post');
+  lines.push('Hashtags: Tags that help people find your post');
+  lines.push('Trends: Popular ideas/sounds to ride for more reach');
+  lines.push('A/B Test: Two versions. Try both and keep the winner.');
+
+  const html = `
+    <html><head><title>Content Plan PDF</title>${style}</head><body>
+      <h1>AI-Generated Content Plan</h1>
+      <div class="meta">Generated: ${new Date().toLocaleString()}</div>
+      <pre>${esc(lines.join('\n'))}</pre>
+      <div class="no-print"><button onclick="window.print()">Print / Save as PDF</button></div>
+      <script>window.addEventListener('load', () => setTimeout(() => { window.print(); }, 300));</script>
+    </body></html>
+  `;
+
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
+function regeneratePlan() {
+  if (!state.plan) return;
+  showLoading(true);
+  setTimeout(() => {
+    createPlan(state.plan.inputs);
+    renderPlan();
+    showLoading(false);
+  }, 600);
+}
+
+function gatherInputs() {
+  const niche = $("niche").value;
+  const nicheLabel = $("niche").options[$("niche").selectedIndex]?.text || 'Custom';
+  const platforms = getSelectedValues('platforms');
+  const goals = getSelectedValues('goals');
+  const currentFollowers = $("currentFollowers").value;
+  const duration = parseInt($("planDuration").value, 10);
+  const targetAudience = $("targetAudience").value.trim();
+  const city = ($("city")?.value || '').trim();
+  const state = ($("state")?.value || '').trim();
+  const contentStyle = $("contentStyle").value.trim();
+  const trendsRaw = $("trends").value.trim();
+  const trends = trendsRaw ? trendsRaw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean) : [];
+  const captionLength = $("captionLength").value;
+  const abHooks = $("abHooks").checked;
+
+  return { niche, nicheLabel, platforms, goals, currentFollowers, duration, targetAudience, city, state, contentStyle, trends, captionLength, abHooks };
+}
+
+function validateInputs(inputs) {
+  const errors = [];
+  if (!inputs.niche) errors.push('Please select a niche.');
+  if (!inputs.platforms.length) errors.push('Select at least one platform.');
+  if (!inputs.duration || inputs.duration < 30) errors.push('Plan duration must be 30 days or more.');
+  return errors;
+}
+
+function handleGenerate(e) {
+  e.preventDefault();
+  const inputs = gatherInputs();
+  const errors = validateInputs(inputs);
+  if (errors.length) {
+    alert(errors.join('\n'));
+    return;
+  }
+  showLoading(true);
+  setTimeout(() => {
+    createPlan(inputs);
+    state.currentWeekIndex = 0;
+    renderPlan();
+    const resultsEl = $("resultsSection");
+    if (resultsEl) resultsEl.style.display = 'block';
+    showLoading(false);
+  }, 800);
+}
+
+function init() {
+  const form = $("contentForm");
+  if (form) {
+    form.addEventListener('submit', handleGenerate);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', init);
+
+
+// Creator script generator
+function generateCreatorScript(niche, platform, type, pillar, hook, goalTag, brandProfile){
+  const tone = brandProfile?.tone || 'playful';
+  const cta = randomPick((PLATFORM_TEMPLATES[platform]?.ctas)||["Follow for more","Save this","Share this"]);
+  const beats = [];
+  // Opening tied to hook
+  beats.push(`Opening (0-3s): ${hook}`);
+  // Middle beats depend on goal
+  if (goalTag === 'Conversion') {
+    beats.push(`Beat 1 (Value): Why ${pillar.toLowerCase()} matters right now`);
+    beats.push(`Beat 2 (Steps): Do this next → 1) 2) 3)`);
+    beats.push(`Beat 3 (Proof): Quick example/result`);
+  } else if (goalTag === 'Engagement') {
+    beats.push(`Beat 1 (Relate): Common mistake in ${pillar.toLowerCase()}`);
+    beats.push(`Beat 2 (Teach): The fix in 3 bullets`);
+    beats.push(`Beat 3 (Prompt): Ask a question to spark comments`);
+  } else if (goalTag === 'Reach') {
+    beats.push(`Beat 1 (Pattern break): Unexpected angle on ${pillar.toLowerCase()}`);
+    beats.push(`Beat 2 (Tease): Promise a quick win`);
+    beats.push(`Beat 3 (Payoff): Show the outcome in 5s`);
+  } else {
+    beats.push(`Beat 1: Quick context on ${pillar.toLowerCase()}`);
+    beats.push(`Beat 2: 3 key tips`);
+    beats.push(`Beat 3: Summary in one sentence`);
+  }
+  // Real estate special shot ideas
+  if (niche === 'realestate') {
+    beats.push(`B-roll ideas: Front elevation → Kitchen feature → Backyard/amenities → Map overlay`);
+  }
+  // Platform-tailored close
+  const close = platform === 'tiktok' || platform === 'instagram'
+    ? `CTA: ${cta} (add on-screen text + captions)`
+    : platform === 'youtube'
+      ? `CTA: ${cta} (end screen + description link)`
+      : `CTA: ${cta}`;
+  beats.push(close);
+  // Tone tweak
+  const prefix = tone === 'professional' ? '[Concise & data-backed] ' : tone === 'luxury' ? '[Minimal & refined] ' : tone === 'eco' ? '[Sustainable angle] ' : '';
+  return prefix + beats.join('\n');
+}
+
+function showDayDetails(day) {
+  const container = $("contentDetails");
+  container.innerHTML = day.ideas.map((idea) => {
+    const abBlock = idea.hookB ? `
+      <div class=\"content-item\">\n        <h4>Variant B: ${idea.hookB}</h4>\n        <div class=\"meta\">Caption B</div>\n        <p>${idea.captionB}</p>\n        ${idea.descriptionB ? `<p>${idea.descriptionB}</p>` : ''}\n        ${idea.scriptB ? `<div class=\"meta\">Creator Script B</div><p>${idea.scriptB.replace(/\n/g,'<br/>')}</p>` : ''}\n      </div>` : '';
+
+    return `<div class=\"content-item\">\n      <h4>${idea.hookA}</h4>\n      <div class=\"meta\">Platform: ${idea.platform.toUpperCase()} • Best Time: ${idea.bestTime} • Goal: ${idea.goalTag} • Pillar: ${idea.pillar}</div>\n      <p>${idea.captionA}</p>\n      <p>${idea.descriptionA}</p>\n      ${idea.hashtags ? `<p>${idea.hashtags}</p>` : ''}\n      ${idea.trendsUsed?.length ? `<p><strong>Trends:</strong> ${idea.trendsUsed.join(' • ')}</p>` : ''}\n    </div>${abBlock}`;
+  }).join('');
+
+  // Inject a simple day script preview into the legend area
+  const legendScript = $("legendScript");
+  if (legendScript) {
+    const preview = day.ideas.map(idea => {
+      const parts = [];
+      if (idea.scriptA) {
+        parts.push(`<div class=\"preview-block\"><div class=\"meta\">Script A (${idea.platform.toUpperCase()} • ${idea.type})</div><p>${idea.scriptA.replace(/\n/g,'<br/>')}</p></div>`);
+      }
+      if (idea.scriptB) {
+        parts.push(`<div class=\"preview-block\"><div class=\"meta\">Script B (${idea.platform.toUpperCase()} • ${idea.type})</div><p>${idea.scriptB.replace(/\n/g,'<br/>')}</p></div>`);
+      }
+      return parts.join('');
+    }).join('');
+    legendScript.innerHTML = preview || '<em>No script for this day.</em>';
+  }
+}
+
+function previousWeek() {
+  if (state.currentWeekIndex > 0) {
+    state.currentWeekIndex--;
+    renderPlan();
+  }
+}
+
+function nextWeek() {
+  if (state.currentWeekIndex < state.totalWeeks - 1) {
+    state.currentWeekIndex++;
+    renderPlan();
+  }
+}
+
+function exportPlan() {
+  if (!state.plan) return;
+  const { inputs, calendar } = state.plan;
+  const data = {
+    generatedAt: new Date().toISOString(),
+    inputs,
+    calendar,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `content-plan-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function csvEscape(value) {
+  if (value == null) return '';
+  const v = String(value);
+  if (/[",\n]/.test(v)) {
+    return '"' + v.replace(/"/g, '""') + '"';
+  }
+  return v;
+}
+
+function exportCSV() {
+  if (!state.plan) return;
+  const rows = [];
+  const header = [
+    'Week','Day Number','Weekday','Platform','Type','Pillar','Best Time','Goal','Hook A','Caption A','Hook B','Caption B','Hashtags','Trends'
+  ];
+  rows.push(header.join(','));
+
+  state.plan.calendar.forEach((week, wIdx) => {
+    week.forEach(day => {
+      day.ideas.forEach(idea => {
+        const row = [
+          `Week ${wIdx+1}`,
+          day.dayNumber,
+          day.weekday,
+          idea.platform.toUpperCase(),
+          idea.type,
+          idea.pillar,
+          idea.bestTime,
+          idea.goalTag,
+          idea.hookA || '',
+          idea.captionA || '',
+          idea.hookB || '',
+          idea.captionB || '',
+          idea.hashtags || '',
+          (idea.trendsUsed||[]).join(' | '),
+        ].map(csvEscape);
+        rows.push(row.join(','));
+      });
+    });
+  });
+
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `content-plan-${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportPDF() {
+  if (!state.plan) return;
+  const win = window.open('', '_blank');
+  const { inputs, calendar } = state.plan;
+
+  // Plain text style - minimal formatting
+  const style = `
+    <style>
+      body { 
+        font-family: "Courier New", monospace; 
+        padding: 20px; 
+        color: #000; 
+        background: #fff;
+        line-height: 1.4;
+      }
+      h1, h2, h3 { 
+        font-weight: bold; 
+        margin: 20px 0 10px 0; 
+      }
+      pre { 
+        white-space: pre-wrap; 
+        word-wrap: break-word; 
+        margin: 0;
+      }
+      .section { 
+        margin-bottom: 30px; 
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 20px;
+      }
+      @media print { 
+        .no-print { display: none; } 
+        body { font-size: 11px; }
+      }
+    </style>
+  `;
+
+  // Generate plain text content
+  let content = `AI-GENERATED CONTENT PLAN\n`;
+  content += `Generated: ${new Date().toLocaleString()}\n\n`;
+  
+  // Strategy overview in plain text
+  content += `STRATEGY OVERVIEW\n`;
+  content += `================\n`;
+  content += `Niche: ${inputs.nicheLabel}\n`;
+  content += `Platforms: ${inputs.platforms.join(', ')}\n`;
+  content += `Target Audience: ${inputs.targetAudience}\n`;
+  if (inputs.city || inputs.state) {
+    content += `Location: ${[inputs.city, inputs.state].filter(Boolean).join(', ')}\n`;
+  }
+  content += `Duration: ${inputs.duration} days\n`;
+  content += `Goals: ${inputs.goals.join(', ')}\n\n`;
+
+  // Calendar content in plain text
+  content += `CONTENT CALENDAR\n`;
+  content += `================\n\n`;
+
+  calendar.forEach((week, wIdx) => {
+    content += `WEEK ${wIdx + 1}\n`;
+    content += `--------\n`;
+    
+    week.forEach(day => {
+      content += `\nDay ${day.dayNumber} (${day.weekday})\n`;
+      content += `${'-'.repeat(20)}\n`;
+      
+      day.ideas.forEach((idea, ideaIdx) => {
+        content += `\nPost ${ideaIdx + 1}:\n`;
+        content += `Platform: ${idea.platform.toUpperCase()}\n`;
+        content += `Type: ${idea.type}\n`;
+        content += `Pillar: ${idea.pillar}\n`;
+        content += `Best Time: ${idea.bestTime}\n`;
+        content += `Goal: ${idea.goalTag}\n\n`;
+        
+        content += `Hook A: ${idea.hookA}\n`;
+        if (idea.hookB) content += `Hook B: ${idea.hookB}\n`;
+        
+        content += `\nCaption A:\n${idea.captionA}\n`;
+        if (idea.captionB) content += `\nCaption B:\n${idea.captionB}\n`;
+        
+        if (idea.hashtags) content += `\nHashtags: ${idea.hashtags}\n`;
+        if (idea.trendsUsed && idea.trendsUsed.length) {
+          content += `Trends: ${idea.trendsUsed.join(', ')}\n`;
+        }
+
+        if (idea.scriptA) {
+          content += `\nScript A:\n${idea.scriptA}\n`;
+        }
+        if (idea.scriptB) {
+          content += `\nScript B:\n${idea.scriptB}\n`;
+        }
+        
+        content += `\n${'='.repeat(40)}\n`;
+      });
+    });
+    content += `\n`;
+  });
+
+  // Append Legend at the end
+  content += `\nLEGEND & GLOSSARY\n`;
+  content += `================\n`;
+  content += `Script: What to say on camera. A simple outline you can follow.\n`;
+  content += `  How to use the script:\n`;
+  content += `  1. Hook: Say the first line fast to grab attention (first 3 seconds).\n`;
+  content += `  2. Beats: Show 2-3 steps or tips. Keep it short and clear.\n`;
+  content += `  3. CTA: Tell viewers what to do (like, comment, share, DM).\n`;
+  content += `  Make it yours: add your city/state or a quick example.\n\n`;
+  content += `Platform: Where you post (Instagram, TikTok, YouTube, etc.)\n`;
+  content += `Type: What kind of post it is (short video, photo, carousel, live)\n`;
+  content += `Pillar: The main topic bucket your posts rotate through\n`;
+  content += `Best Time: When to post for more views\n`;
+  content += `Hook: The first line that grabs attention\n`;
+  content += `Caption: The words that go with your post\n`;
+  content += `Hashtags: Tags that help people find your post\n`;
+  content += `Trends: Popular ideas/sounds to ride for more reach\n`;
+  content += `A/B Test: Two versions. Try both and keep the winner.\n`;
+
+  // Escape HTML in content
+  const escapeHtml = (text) => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  };
+
+  const html = `
+    <html><head><title>Content Plan PDF</title>${style}</head><body>
+      <pre>${escapeHtml(content)}</pre>
+      <div class="section no-print">
+        <button onclick="window.print()">Print / Save as PDF</button>
+      </div>
+      <script>window.addEventListener('load', () => setTimeout(() => { window.print(); }, 300));</script>
+    </body></html>
+  `;
+
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
+function regeneratePlan() {
+  if (!state.plan) return;
+  showLoading(true);
+  setTimeout(() => {
+    createPlan(state.plan.inputs);
+    renderPlan();
+    showLoading(false);
+  }, 600);
+}
+
+function gatherInputs() {
+  const niche = $("niche").value;
+  const nicheLabel = $("niche").options[$("niche").selectedIndex]?.text || 'Custom';
+  const platforms = getSelectedValues('platforms');
+  const goals = getSelectedValues('goals');
+  const currentFollowers = $("currentFollowers").value;
+  const duration = parseInt($("planDuration").value, 10);
+  const targetAudience = $("targetAudience").value.trim();
+  const city = ($("city")?.value || '').trim();
+  const state = ($("state")?.value || '').trim();
+  const contentStyle = $("contentStyle").value.trim();
+  const trendsRaw = $("trends").value.trim();
+  const trends = trendsRaw ? trendsRaw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean) : [];
+  const captionLength = $("captionLength").value;
+  const abHooks = $("abHooks").checked;
+
+  return { niche, nicheLabel, platforms, goals, currentFollowers, duration, targetAudience, city, state, contentStyle, trends, captionLength, abHooks };
+}
+
+function validateInputs(inputs) {
+  const errors = [];
+  if (!inputs.niche) errors.push('Please select a niche.');
+  if (!inputs.platforms.length) errors.push('Select at least one platform.');
+  if (!inputs.duration || inputs.duration < 30) errors.push('Plan duration must be 30 days or more.');
+  return errors;
+}
+
+function handleGenerate(e) {
+  e.preventDefault();
+  const inputs = gatherInputs();
+  const errors = validateInputs(inputs);
+  if (errors.length) {
+    alert(errors.join('\n'));
+    return;
+  }
+  showLoading(true);
+  setTimeout(() => {
+    createPlan(inputs);
+    state.currentWeekIndex = 0;
+    renderPlan();
+    const resultsEl = $("resultsSection");
+    if (resultsEl) resultsEl.style.display = 'block';
+    showLoading(false);
+  }, 800);
+}
+
+function init() {
+  const form = $("contentForm");
+  if (form) {
+    form.addEventListener('submit', handleGenerate);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', init);
+
+
+// Creator script generator
+function generateCreatorScript(niche, platform, type, pillar, hook, goalTag, brandProfile){
+  const tone = brandProfile?.tone || 'playful';
+  const cta = randomPick((PLATFORM_TEMPLATES[platform]?.ctas)||["Follow for more","Save this","Share this"]);
+  const beats = [];
+  // Opening tied to hook
+  beats.push(`Opening (0-3s): ${hook}`);
+  // Middle beats depend on goal
+  if (goalTag === 'Conversion') {
+    beats.push(`Beat 1 (Value): Why ${pillar.toLowerCase()} matters right now`);
+    beats.push(`Beat 2 (Steps): Do this next → 1) 2) 3)`);
+    beats.push(`Beat 3 (Proof): Quick example/result`);
+  } else if (goalTag === 'Engagement') {
+    beats.push(`Beat 1 (Relate): Common mistake in ${pillar.toLowerCase()}`);
+    beats.push(`Beat 2 (Teach): The fix in 3 bullets`);
+    beats.push(`Beat 3 (Prompt): Ask a question to spark comments`);
+  } else if (goalTag === 'Reach') {
+    beats.push(`Beat 1 (Pattern break): Unexpected angle on ${pillar.toLowerCase()}`);
+    beats.push(`Beat 2 (Tease): Promise a quick win`);
+    beats.push(`Beat 3 (Payoff): Show the outcome in 5s`);
+  } else {
+    beats.push(`Beat 1: Quick context on ${pillar.toLowerCase()}`);
+    beats.push(`Beat 2: 3 key tips`);
+    beats.push(`Beat 3: Summary in one sentence`);
+  }
+  // Real estate special shot ideas
+  if (niche === 'realestate') {
+    beats.push(`B-roll ideas: Front elevation → Kitchen feature → Backyard/amenities → Map overlay`);
+  }
+  // Platform-tailored close
+  const close = platform === 'tiktok' || platform === 'instagram'
+    ? `CTA: ${cta} (add on-screen text + captions)`
+    : platform === 'youtube'
+      ? `CTA: ${cta} (end screen + description link)`
+      : `CTA: ${cta}`;
+  beats.push(close);
+  // Tone tweak
+  const prefix = tone === 'professional' ? '[Concise & data-backed] ' : tone === 'luxury' ? '[Minimal & refined] ' : tone === 'eco' ? '[Sustainable angle] ' : '';
+  return prefix + beats.join('\n');
+}
+function generatePostIdea(niche, platform, goals, options) {
+  const tpl = PLATFORM_TEMPLATES[platform];
+  const pillars = NICHE_CONTENT_PILLARS[niche] || ["Value", "Story", "Community", "Promotion", "Trends"];
+  const mix = tpl.contentMix;
+  const type = weightedPick(mix);
+  const pillar = randomPick(pillars);
+
+  const goalTag = goals.includes('sales') ? 'Conversion' : goals.includes('engagement') ? 'Engagement' : goals.includes('followers') ? 'Reach' : 'Brand';
+  const hooks = options.abHooks ? generateHookVariants(tpl.hooks, niche, pillar, options.trends, goals, options.brandProfile) : { a: randomPick(tpl.hooks), b: null };
+
+  const bestTime = randomPick(tpl.bestTimes);
+  const hashtags = generateHashtags(niche, pillar, platform, options.trends, options.brandProfile);
+
+  const descriptionA = generateDescription(platform, type, pillar, hooks.a, goalTag, options.trends);
+  const captionA = generateCaption(platform, type, pillar, hooks.a, goalTag, options.captionLength, 'A', options.trends, options.brandProfile);
+  const scriptA = generateCreatorScript(niche, platform, type, pillar, hooks.a, goalTag, options.brandProfile);
+
+  let descriptionB = null, captionB = null, scriptB = null;
+  if (options.abHooks && hooks.b) {
+    descriptionB = generateDescription(platform, type, pillar, hooks.b, goalTag, options.trends);
+    captionB = generateCaption(platform, type, pillar, hooks.b, goalTag, options.captionLength, 'B', options.trends, options.brandProfile);
+    scriptB = generateCreatorScript(niche, platform, type, pillar, hooks.b, goalTag, options.brandProfile);
+  }
+
+  return {
+    platform,
+    type,
+    pillar,
+    goalTag,
+    bestTime,
+    hashtags,
+    // A/B hooks, captions and scripts
+    hookA: hooks.a,
+    captionA,
+    descriptionA,
+    scriptA,
+    hookB: hooks.b,
+    captionB,
+    descriptionB,
+    scriptB,
+    trendsUsed: options.trends || [],
+  };
+}
+
+function createPlan(inputs) {
+  const weeks = Math.ceil(inputs.duration / 7);
+  state.totalWeeks = weeks;
+  const stage = stageFromFollowers(inputs.currentFollowers);
+
+  // Branding + trend enrichment
+  const brandProfile = analyzeBranding(inputs);
+  const autoTrends = suggestTrends(inputs);
+  const trendsCombined = unique([...(inputs.trends||[]), ...autoTrends]);
+  const enrichedInputs = { ...inputs, brandProfile, trends: trendsCombined, autoTrends };
+
+  const weeklySlots = buildDailyPostingSlots(enrichedInputs.platforms, stage);
+  const calendar = [];
+  let dayCounter = 1;
+
+  for (let w=0; w<weeks; w++) {
+    const week = [];
+    for (let d=0; d<7; d++) {
+      const platformsForDay = weeklySlots[d] || [];
+      const ideas = platformsForDay.map(p => generatePostIdea(enrichedInputs.niche, p, enrichedInputs.goals, {
+        trends: enrichedInputs.trends,
+        captionLength: enrichedInputs.captionLength,
+        abHooks: enrichedInputs.abHooks,
+        brandProfile,
+      }));
+      week.push({ dayNumber: dayCounter, weekday: WEEK_DAYS[d], ideas });
+      dayCounter++;
+    }
+    calendar.push(week);
+  }
+
+  // Strategy overview
+  const strategyHTML = generateStrategyOverview(enrichedInputs);
+
+  state.plan = { inputs: enrichedInputs, calendar, strategyHTML };
+}
+
+function renderPlan() {
+  if (!state.plan) return;
+  const { calendar, strategyHTML } = state.plan;
+  const weekIndex = state.currentWeekIndex;
+  $("currentWeek").textContent = `Week ${weekIndex + 1}`;
+
+  // Overview
+  $("strategyOverview").innerHTML = strategyHTML;
+
+  // Calendar grid
+  const week = calendar[weekIndex];
+  const grid = $("calendarGrid");
+  grid.innerHTML = '';
+  week.forEach(day => {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'day-card';
+    const header = `<div class=\"day-header\"><span>${day.weekday}</span><span>Day ${day.dayNumber}</span></div>`;
+    const items = day.ideas.map(idea => `<span class=\"content-pill\"><span class=\"platform\">${idea.platform.toUpperCase()}</span>${idea.type} • ${idea.pillar}</span>`).join('');
+    dayEl.innerHTML = header + items;
+    dayEl.addEventListener('click', () => showDayDetails(day));
+    grid.appendChild(dayEl);
+  });
+
+  // Details default to the first day
+  showDayDetails(week[0]);
+}
+
+function showDayDetails(day) {
+  const container = $("contentDetails");
+  container.innerHTML = day.ideas.map((idea) => {
+    const abBlock = idea.hookB ? `
+      <div class=\"content-item\">\n        <h4>Variant B: ${idea.hookB}</h4>\n        <div class=\"meta\">Caption B</div>\n        <p>${idea.captionB}</p>\n        ${idea.descriptionB ? `<p>${idea.descriptionB}</p>` : ''}\n        ${idea.scriptB ? `<div class=\"meta\">Creator Script B</div><p>${idea.scriptB.replace(/\n/g,'<br/>')}</p>` : ''}\n      </div>` : '';
+
+    return `<div class=\"content-item\">\n      <h4>${idea.hookA}</h4>\n      <div class=\"meta\">Platform: ${idea.platform.toUpperCase()} • Best Time: ${idea.bestTime} • Goal: ${idea.goalTag} • Pillar: ${idea.pillar}</div>\n      <p>${idea.captionA}</p>\n      <p>${idea.descriptionA}</p>\n      ${idea.hashtags ? `<p>${idea.hashtags}</p>` : ''}\n      ${idea.trendsUsed?.length ? `<p><strong>Trends:</strong> ${idea.trendsUsed.join(' • ')}</p>` : ''}\n    </div>${abBlock}`;
+  }).join('');
+
+  // Inject a simple day script preview into the legend area
+  const legendScript = $("legendScript");
+  if (legendScript) {
+    const preview = day.ideas.map(idea => {
+      const parts = [];
+      if (idea.scriptA) {
+        parts.push(`<div class=\"preview-block\"><div class=\"meta\">Script A (${idea.platform.toUpperCase()} • ${idea.type})</div><p>${idea.scriptA.replace(/\n/g,'<br/>')}</p></div>`);
+      }
+      if (idea.scriptB) {
+        parts.push(`<div class=\"preview-block\"><div class=\"meta\">Script B (${idea.platform.toUpperCase()} • ${idea.type})</div><p>${idea.scriptB.replace(/\n/g,'<br/>')}</p></div>`);
+      }
+      return parts.join('');
+    }).join('');
+    legendScript.innerHTML = preview || '<em>No script for this day.</em>';
+  }
+}
+
+function previousWeek() {
+  if (state.currentWeekIndex > 0) {
+    state.currentWeekIndex--;
+    renderPlan();
+  }
+}
+
+function nextWeek() {
+  if (state.currentWeekIndex < state.totalWeeks - 1) {
+    state.currentWeekIndex++;
+    renderPlan();
+  }
