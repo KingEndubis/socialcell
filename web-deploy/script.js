@@ -594,6 +594,8 @@ function regeneratePlan() {
     createPlan(inputs);
     state.currentWeekIndex = 0;
     renderPlan();
+    const resultsEl = $("resultsSection");
+    if (resultsEl) resultsEl.style.display = 'block';
     try { showLoading(false); } catch {}
   }, 400);
 }
@@ -1078,6 +1080,8 @@ function handleGenerate(e) {
     createPlan(inputs);
     state.currentWeekIndex = 0;
     renderPlan();
+    const resultsEl = $("resultsSection");
+    if (resultsEl) resultsEl.style.display = 'block';
     try { showLoading(false); } catch {}
   }, 400);
 }
