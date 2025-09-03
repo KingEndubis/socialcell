@@ -468,6 +468,26 @@ function generatePostIdea(niche, platform, goals, options) {
   };
 }
 
+async function fetchWebSignals(inputs) {
+  try {
+    const terms = [inputs.niche, inputs.city, inputs.state].filter(Boolean).join(' ');
+    if (!terms) return [];
+    const q = encodeURIComponent(terms);
+    const url = `https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`;
+    const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+    const res = await fetch(proxy, { cache: 'no-store' });
+    if (!res.ok) throw new Error('fetch failed');
+    const text = await res.text();
+    const doc = new DOMParser().parseFromString(text, 'text/xml');
+    const items = Array.from(doc.querySelectorAll('item > title')).map(n => (n.textContent||'').trim()).filter(Boolean);
+    const cleaned = items.map(t => t.replace(/\s*-\s*[^-]+$/, ''));
+    const uniq = Array.from(new Set(cleaned)).slice(0, 15);
+    return uniq;
+  } catch (e) {
+    return [];
+  }
+}
+
 function createPlan(inputs) {
   const weeks = Math.ceil(inputs.duration / 7);
   state.totalWeeks = weeks;
@@ -476,8 +496,10 @@ function createPlan(inputs) {
   // Branding + trend enrichment
   const brandProfile = analyzeBranding(inputs);
   const autoTrends = suggestTrends(inputs);
-  const trendsCombined = unique([...(inputs.trends||[]), ...autoTrends]);
-  const enrichedInputs = { ...inputs, brandProfile, trends: trendsCombined, autoTrends };
+  // Merge any previously fetched web signals (if any cached on state)
+  const webSignals = state.webSignals || [];
+  const trendsCombined = unique([...(inputs.trends||[]), ...autoTrends, ...webSignals]);
+  const enrichedInputs = { ...inputs, brandProfile, trends: trendsCombined, autoTrends, webSignals };
 
   const weeklySlots = buildDailyPostingSlots(enrichedInputs.platforms, stage);
   const calendar = [];
@@ -503,6 +525,10 @@ function createPlan(inputs) {
   const strategyHTML = generateStrategyOverview(enrichedInputs);
 
   state.plan = { inputs: enrichedInputs, calendar, strategyHTML };
+  // Persist last known location for convenience
+  try {
+    if (inputs.city || inputs.state) localStorage.setItem('lastLocation', JSON.stringify({ city: inputs.city||'', state: inputs.state||'' }));
+  } catch {}
 }
 
 function renderPlan() {
@@ -1071,13 +1097,24 @@ function gatherInputs() {
   const currentFollowers = $("currentFollowers")?.value || '0-1k';
   const duration = parseInt($("planDuration")?.value || '7', 10) || 7;
   const targetAudience = $("targetAudience")?.value?.trim() || '';
-  const city = ($("city")?.value || '').trim();
-  const state = ($("state")?.value || '').trim();
+  let city = ($("city")?.value || '').trim();
+  let state = ($("state")?.value || '').trim();
   const contentStyle = $("contentStyle")?.value?.trim() || '';
   const trendsRaw = $("trends")?.value?.trim() || '';
   const trends = trendsRaw ? trendsRaw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean) : [];
   const captionLength = $("captionLength")?.value || 'medium';
   const abHooks = !!$("abHooks")?.checked;
+  const autoLocalize = !!document.getElementById('autoLocalize')?.checked;
+
+  if (autoLocalize && (!city || !state)) {
+    try {
+      const stored = JSON.parse(localStorage.getItem('lastLocation') || 'null');
+      if (stored) {
+        if (!city && stored.city) city = stored.city;
+        if (!state && stored.state) state = stored.state;
+      }
+    } catch {}
+  }
 
   return { niche, nicheLabel, platforms, goals, currentFollowers, duration, targetAudience, city, state, contentStyle, trends, captionLength, abHooks };
 }
@@ -1099,13 +1136,23 @@ function handleGenerate(e) {
     return;
   }
   showLoading(true);
-  setTimeout(() => {
+  setTimeout(async () => {
+    // Try to enrich with live web signals (non-blocking if it fails)
+    try {
+      const signals = await fetchWebSignals(inputs);
+      if (Array.isArray(signals) && signals.length) {
+        state.webSignals = signals;
+      }
+    } catch {}
     createPlan(inputs);
     state.currentWeekIndex = 0;
     renderPlan();
     const resultsEl = $("resultsSection");
     if (resultsEl) resultsEl.style.display = 'block';
     try { showLoading(false); } catch {}
+    // Auto-export if enabled
+    const autoExport = !!document.getElementById('autoExport')?.checked;
+    if (autoExport) { try { await exportPDF(); } catch {} }
   }, 400);
 }
 
@@ -1124,6 +1171,36 @@ function init() {
   if (!anyPlatformChecked) {
     const insta = document.querySelector('input[name="platforms"][value="instagram"]');
     if (insta) insta.checked = true;
+  }
+  // One-Click 30-Day Plan
+  const quickBtn = document.getElementById('quick30Btn');
+  if (quickBtn) {
+    quickBtn.addEventListener('click', async () => {
+      const inputs = gatherInputs();
+      inputs.duration = 30;
+      const errors = validateInputs(inputs);
+      if (errors.length) { alert(errors.join('\n')); return; }
+      showLoading(true);
+      setTimeout(async () => {
+        try {
+          const signals = await fetchWebSignals(inputs);
+          if (Array.isArray(signals) && signals.length) {
+            state.webSignals = signals;
+          }
+        } catch {}
+        createPlan(inputs);
+        state.currentWeekIndex = 0;
+        renderPlan();
+        const resultsEl = $("resultsSection");
+        if (resultsEl) resultsEl.style.display = 'block';
+        try { showLoading(false); } catch {}
+        try {
+          if (inputs.city || inputs.state) localStorage.setItem('lastLocation', JSON.stringify({ city: inputs.city||'', state: inputs.state||'' }));
+        } catch {}
+        const autoExport = !!document.getElementById('autoExport')?.checked;
+        if (autoExport) { try { await exportPDF(); } catch {} }
+      }, 400);
+    });
   }
 }
 
