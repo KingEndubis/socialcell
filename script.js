@@ -436,6 +436,17 @@ function generatePostIdea(niche, platform, goals, options) {
     captionB = generateCaption(platform, type, pillar, hooks.b, goalTag, options.captionLength, 'B', options.trends, options.brandProfile);
   }
 
+  // Derive a simple primary topic for this idea
+  const topic = (options.trends && options.trends.length)
+    ? randomPick(options.trends)
+    : `${pillar} tip`;
+
+  // Generate creator scripts based on hooks (A/B)
+  const scriptA = generateCreatorScript(niche, platform, type, pillar, hooks.a, goalTag, options.brandProfile);
+  const scriptB = (options.abHooks && hooks.b)
+    ? generateCreatorScript(niche, platform, type, pillar, hooks.b, goalTag, options.brandProfile)
+    : null;
+
   return {
     platform,
     type,
@@ -443,13 +454,16 @@ function generatePostIdea(niche, platform, goals, options) {
     goalTag,
     bestTime,
     hashtags,
-    // A/B hooks and captions
+    // Topic + A/B hooks, captions, scripts
+    topic,
     hookA: hooks.a,
     captionA,
     descriptionA,
+    scriptA,
     hookB: hooks.b,
     captionB,
     descriptionB,
+    scriptB,
     trendsUsed: options.trends || [],
   };
 }
@@ -508,7 +522,7 @@ function renderPlan() {
     const dayEl = document.createElement('div');
     dayEl.className = 'day-card';
     const header = `<div class=\"day-header\"><span>${day.weekday}</span><span>Day ${day.dayNumber}</span></div>`;
-    const items = day.ideas.map(idea => `<span class=\"content-pill\"><span class=\"platform\">${idea.platform.toUpperCase()}</span>${idea.type} â€¢ ${idea.pillar}</span>`).join('');
+    const items = day.ideas.map(idea => `<span class=\"content-pill\"><span class=\"platform\">${idea.platform.toUpperCase()}</span>${idea.type} â€¢ ${idea.pillar}${idea.topic ? ' â€¢ ' + idea.topic : ''}</span>`).join('');
     dayEl.innerHTML = header + items;
     dayEl.addEventListener('click', () => showDayDetails(day));
     grid.appendChild(dayEl);
@@ -545,7 +559,7 @@ function showDayDetails(day) {
     const abBlock = idea.hookB ? `
       <div class=\"content-item\">\n        <h4>Variant B: ${idea.hookB}</h4>\n        <div class=\"meta\">Caption B</div>\n        <p>${idea.captionB}</p>\n        ${idea.descriptionB ? `<p>${idea.descriptionB}</p>` : ''}\n        ${idea.scriptB ? `<div class=\"meta\">Creator Script B</div><p>${idea.scriptB.replace(/\n/g,'<br/>')}</p>` : ''}\n      </div>` : '';
 
-    return `<div class=\"content-item\">\n      <h4>${idea.hookA}</h4>\n      <div class=\"meta\">Platform: ${idea.platform.toUpperCase()} â€¢ Best Time: ${idea.bestTime} â€¢ Goal: ${idea.goalTag} â€¢ Pillar: ${idea.pillar}</div>\n      <p>${idea.captionA}</p>\n      <p>${idea.descriptionA}</p>\n      ${idea.hashtags ? `<p>${idea.hashtags}</p>` : ''}\n      ${idea.trendsUsed?.length ? `<p><strong>Trends:</strong> ${idea.trendsUsed.join(' â€¢ ')}</p>` : ''}\n    </div>${abBlock}`;
+    return `<div class=\"content-item\">\n      <h4>${idea.hookA}</h4>\n      <div class=\"meta\">Platform: ${idea.platform.toUpperCase()} â€¢ Best Time: ${idea.bestTime} â€¢ Goal: ${idea.goalTag} â€¢ Pillar: ${idea.pillar}</div>\n      ${idea.topic ? `<div class=\"meta\"><strong>Topic:</strong> ${idea.topic}</div>` : ''}\n      <p>${idea.captionA}</p>\n      <p>${idea.descriptionA}</p>\n      ${idea.hashtags ? `<p>${idea.hashtags}</p>` : ''}\n      ${idea.trendsUsed?.length ? `<p><strong>Trends:</strong> ${idea.trendsUsed.join(' â€¢ ')}</p>` : ''}\n    </div>${abBlock}`;
   }).join('');
 
   // Inject a simple day script preview into the legend area
@@ -613,7 +627,7 @@ function exportCSV() {
   if (!state.plan) return;
   const rows = [];
   const header = [
-    'Week','Day Number','Weekday','Platform','Type','Pillar','Best Time','Goal','Hook A','Caption A','Hook B','Caption B','Hashtags','Trends'
+    'Week','Day Number','Weekday','Platform','Type','Pillar','Best Time','Goal','Hook A','Caption A','Hook B','Caption B','Hashtags','Trends','Topic','Script A','Script B'
   ];
   rows.push(header.join(','));
 
@@ -635,6 +649,9 @@ function exportCSV() {
           idea.captionB || '',
           idea.hashtags || '',
           (idea.trendsUsed||[]).join(' | '),
+          idea.topic || '',
+          (idea.scriptA||'').replace(/\n/g,' '),
+          (idea.scriptB||'').replace(/\n/g,' '),
         ].map(csvEscape);
         rows.push(row.join(','));
       });
@@ -671,6 +688,7 @@ function exportHTML() {
             <td>${esc(idea.pillar || '')}</td>
             <td>${esc(idea.bestTime || '')}</td>
             <td>${esc(idea.goalTag || '')}</td>
+            <td>${esc(idea.topic || '')}</td>
             <td>${[idea.hookA?`A: ${esc(idea.hookA)}`:'', idea.hookB?`B: ${esc(idea.hookB)}`:''].filter(Boolean).join('<br/>')}</td>
           </tr>`);
       });
@@ -695,6 +713,7 @@ function exportHTML() {
           <tr>
             <td>
               <div class="row-meta"><span class="badge">Week ${wIdx+1}</span> <span class="badge">Day ${day.dayNumber} • ${esc(day.weekday)}</span> <span class="badge">${esc((idea.platform||'').toUpperCase())}</span> <span class="muted">${esc(idea.type||'')} • ${esc(idea.pillar||'')} • ${esc(idea.bestTime||'')}</span></div>
+              ${idea.topic ? `<div class="meta"><strong>Topic:</strong> ${esc(idea.topic)}</div>` : ''}
               ${captions || '<em>No caption</em>'}
             </td>
             <td>${esc(idea.hashtags || '')}</td>
@@ -779,6 +798,7 @@ ${style}
           <th style=\"width:120px;\">Pillar</th>
           <th style=\"width:100px;\">Best Time</th>
           <th style=\"width:90px;\">Goal</th>
+          <th style=\"width:140px;\">Topic</th>
           <th>Hook(s)</th>
         </tr>
       </thead>
@@ -941,6 +961,7 @@ function openPrintCalendar() {
                     <span class="meta-line">${esc(idea.type || '')} &bull; ${esc(idea.pillar || '')} &bull; ${esc(idea.bestTime || '')}</span>
                   </div>
                   ${idea.hookA ? `<div class="hook">“${esc(idea.hookA)}”</div>` : ''}
+                  ${idea.topic ? `<div class=\"topic\"><strong>Topic:</strong> ${esc(idea.topic)}</div>` : ''}
                   ${idea.captionA ? `<div class="caption">${esc(idea.captionA)}</div>` : ''}
                   ${idea.hashtags ? `<div class="hashtags">${esc(idea.hashtags)}</div>` : ''}
                 </div>
